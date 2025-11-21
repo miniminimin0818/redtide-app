@@ -185,8 +185,8 @@ def main():
             sns.scatterplot(data=sample, x='Temp', y='Salt', alpha=0.15, color='teal', ax=ax, s=15, label='관측 데이터')
             
             # 축 제목을 여기서 한글로 바꿔줍니다.
-            ax.set_xlabel("수온 (℃)")
-            ax.set_ylabel("염분 (psu)")
+            ax.set_xlabel("수온")
+            ax.set_ylabel("염분")
             
             import matplotlib.patches as patches
             # 사용자 로직에 맞춰 박스 구간 수정 (25~28도, 33~35psu)
@@ -198,3 +198,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
