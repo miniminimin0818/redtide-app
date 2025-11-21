@@ -196,8 +196,8 @@ def main():
             input_temp = st.number_input("수온 입력 (℃)", value=25.5, step=0.1, min_value=0.0, max_value=35.0)
             if st.button("예측 실행", type="primary", key='btn2', use_container_width=True):
                 # 선형 회귀 모델 학습 (전체 데이터 사용)
-                X = df[['Temp']]
-                y = df['Salt']
+                X = df[['수온']]
+                y = df['염분']
                 model = LinearRegression()
                 model.fit(X, y)
                 
@@ -246,5 +246,6 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
