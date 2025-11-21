@@ -182,15 +182,15 @@ def main():
             sample = df.sample(min(len(df), 5000))
             
             # x, y에는 데이터의 실제 영어 컬럼명('Temp', 'Salt')을 넣어야 합니다.
-            sns.scatterplot(data=sample, x='Temp', y='Salt', alpha=0.15, color='teal', ax=ax, s=15, label='관측 데이터')
+            sns.scatterplot(data=sample, x='Temp', y='Salt', alpha=0.15, color='teal', ax=ax, s=15, label='Data')
             
             # 축 제목을 여기서 한글로 바꿔줍니다.
-            ax.set_xlabel("수온")
-            ax.set_ylabel("염분")
+            ax.set_xlabel("Temp(℃)")
+            ax.set_ylabel("Salt(psu)")
             
             import matplotlib.patches as patches
             # 사용자 로직에 맞춰 박스 구간 수정 (25~28도, 33~35psu)
-            rect = patches.Rectangle((25, 33), 3, 2, linewidth=2, edgecolor='red', facecolor='none', label='적조 최적 구간')
+            rect = patches.Rectangle((25, 33), 3, 2, linewidth=2, edgecolor='red', facecolor='none', label='Red Tide Optimum')
             ax.add_patch(rect)
             ax.legend(loc='upper right')
             ax.grid(True, alpha=0.3)
@@ -198,4 +198,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
