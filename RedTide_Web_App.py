@@ -87,9 +87,9 @@ def assess_red_tide_risk(temp, salt):
         reasons.append("❄️ **과저수온(19℃↓)**: 적조 생물 성장이 확연히 저하됩니다.")
 
     # 염분 평가
-    if 33 <= salt <= 35:
+    if 32 <= salt <= 35:
         risk_score += 50
-        reasons.append("🧂 **염분(33~35psu)**: 적조 생물 증식에 최적입니다.")
+        reasons.append("🧂 **염분(32~35psu)**: 적조 생물 증식에 최적입니다.")
     elif salt <= 32:
         risk_score -= 20
         reasons.append("💧 **저염분(32psu↓)**: 염분이 너무 낮아 적조 생물의 성장이 특히 저하됩니다.")
@@ -189,8 +189,8 @@ def main():
             ax.set_ylabel("Salt(psu)")
             
             import matplotlib.patches as patches
-            # 사용자 로직에 맞춰 박스 구간 수정 (25~28도, 33~35psu)
-            rect = patches.Rectangle((25, 33), 3, 2, linewidth=2, edgecolor='red', facecolor='none', label='Red Tide Optimum')
+            # 사용자 로직에 맞춰 박스 구간 수정 (25~28도, 32~35psu)
+            rect = patches.Rectangle((25, 35), 3, 2, linewidth=3, edgecolor='red', facecolor='none', label='Red Tide Optimum')
             ax.add_patch(rect)
             ax.legend(loc='upper right')
             ax.grid(True, alpha=0.3)
@@ -198,5 +198,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
