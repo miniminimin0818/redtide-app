@@ -226,12 +226,12 @@ def main():
             sample = df.sample(min(len(df), 5000))
             
             # 산점도 그리기
-            sns.scatterplot(data=sample, x="온도", y="염분", alpha=0.15, color='teal', ax=ax, s=15, label="관측 데이터")
+            sns.scatterplot(data=sample, x='온도', y='염분', alpha=0.15, color='teal', ax=ax, s=15, label='관측 데이터')
             
             # 적조 위험 구간 (빨간 네모 박스) 표시
             import matplotlib.patches as patches
             # (x시작, y시작), 너비, 높이 -> 수온 24~27도, 염분 30~34psu
-            rect = patches.Rectangle((24, 30), 3, 4, linewidth=2, edgecolor='red', facecolor='none', label="적조 위험 구간")
+            rect = patches.Rectangle((24, 30), 3, 4, linewidth=2, edgecolor='red', facecolor='none', label='적조 위험 구간')
             ax.add_patch(rect)
             
             ax.set_xlabel("수온 (℃)")
@@ -246,3 +246,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
