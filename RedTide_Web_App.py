@@ -190,7 +190,7 @@ def main():
             
             import matplotlib.patches as patches
             # 사용자 로직에 맞춰 박스 구간 수정 (25~28도, 32~35psu)
-            rect = patches.Rectangle((25, 35), 3, 2, linewidth=3, edgecolor='red', facecolor='none', label='Red Tide Optimum')
+            rect = patches.Rectangle((23, 30), 5, 5, linewidth=3, edgecolor='red', facecolor='none', label='Red Tide Optimum')
             ax.add_patch(rect)
             ax.legend(loc='upper right')
             ax.grid(True, alpha=0.3)
@@ -198,6 +198,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
