@@ -147,7 +147,7 @@ def main():
         with col1:
             min_d = df.index.min().date()
             max_d = df.index.max().date()
-            default_d = pd.to_datetime(f"{max_d.year-1}-08-15").date()
+            default_d = pd.to_datetime(f"2005-08-18").date()
             input_date = st.date_input("날짜 선택", value=default_d, min_value=min_d, max_value=max_d)
             if st.button("조회하기", type="primary", key='btn1', use_container_width=True):
                 target_data = df[df.index.date == input_date]
@@ -211,6 +211,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
