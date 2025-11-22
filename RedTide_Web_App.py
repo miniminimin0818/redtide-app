@@ -71,22 +71,22 @@ def assess_red_tide_risk(temp, salt):
 
     # 수온 평가
     if 20 == temp and 25 == temp and 27.5 == temp:
-        risk_score += 90
+        risk_score += 70
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
-    elif 25 == temp and 27.5 == temp:
-        risk_score += 90
+    elif 25 == temp:
+        risk_score += 70
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
     elif 27.5 == temp:
-        risk_score += 90
+        risk_score += 70
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
     elif 21 <= temp <= 24.9:
-        risk_score += 50
+        risk_score += 60
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif 25.1 <= temp <= 27.4:
-        risk_score += 50
+        risk_score += 60
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif 27.6 <= temp <= 30:
-        risk_score += 50
+        risk_score += 60
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif temp >= 30:
         risk_score += 30
@@ -95,7 +95,7 @@ def assess_red_tide_risk(temp, salt):
         risk_score += 10
         reasons.append("❄️ **과저수온(15℃↓)**: 26psu 이상 일 때 적조 생물 성장이 약간 발생하는 것을 확인할 수 있으며, 24psu 이하일 경우 성장이 확연히 저하됩니다.")
     else:
-        risk_score -= 20
+        risk_score -= 10
         reasons.append("🌡️ **수온**: 적조 발생 최적 범위를 벗어났습니다.")
 
     # 염분 평가
@@ -111,7 +111,7 @@ def assess_red_tide_risk(temp, salt):
         risk_score -= 30
         reasons.append("🧂 **저염분(20psu↓)**: 염분이 너무 낮아 적조 생물의 성장이 특히 저하됩니다.")
     else:
-        risk_score -=20
+        risk_score -=10
         reasons.append("🧂 **염분**: 적조 발생 최적 범위를 벗어났습니다.")
 
     # 최종 진단
@@ -216,6 +216,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
