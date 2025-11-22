@@ -70,7 +70,7 @@ def assess_red_tide_risk(temp, salt):
     reasons = []
 
     # 수온 평가
-    if 20 == temp and 25 == temp and 27.5 == temp:
+    if 20 == temp:
         risk_score += 70
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
     elif 25 == temp:
@@ -211,6 +211,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
