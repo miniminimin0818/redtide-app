@@ -103,7 +103,7 @@ def assess_red_tide_risk(temp, salt):
         risk_score += 50
         reasons.append("🧂 **염분(31~34psu)**: 적조 생물 증식에 최적입니다.")
     elif salt == 26:
-        if temp <= 15
+        if temp <= 15:
             risk_score += 40
             reasons.append("🧂 **염분(26psu↑)**: 수온이 15℃ 이하일 때 적조 생물 성장이 약간 발생하는 것을 확인할 수 있다.")
         
@@ -216,6 +216,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
