@@ -82,10 +82,10 @@ def assess_red_tide_risk(temp, salt):
     elif 21 <= temp <= 24.9:
         risk_score += 30
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
-     elif 25.1 <= temp <= 27.4:
+    elif 25.1 <= temp <= 27.4:
         risk_score += 30
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
-     elif 27.6 <= temp <= 30:
+    elif 27.6 <= temp <= 30:
         risk_score += 30
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif temp >= 30:
@@ -207,6 +207,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
