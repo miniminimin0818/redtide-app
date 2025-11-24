@@ -124,9 +124,9 @@ def assess_red_tide_risk(temp, salt):
         reasons.append("🧂 **염분**: 적조 발생 최적 범위를 벗어났습니다.")
 
     # --- 최종 진단 ---
-    if risk_score >= 90:
+    if risk_score >= 80:
         return "🚨 매우 위험 (적조 대발생 가능)", "red", reasons
-    elif risk_score >= 50:
+    elif risk_score >= 40:
         return "⚠️ 주의 (적조 발생 가능 조건 충족)", "orange", reasons
     else:
         return "✅ 안전 (적조 발생 확률 낮음)", "green", reasons
@@ -287,4 +287,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
