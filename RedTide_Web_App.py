@@ -81,7 +81,6 @@ def assess_red_tide_risk(temp, salt):
     reasons = []
 
     # --- 수온 평가 ---
-    # (사용자님이 지정하신 정확한 로직 유지)
     if 20 == temp:
         risk_score += 60
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
@@ -140,12 +139,12 @@ def main():
         st.header("데이터 현황")
         with st.spinner("데이터 로딩 중..."):
             env_df, occur_df = load_all_data()
-            st.metric("총 데이터", f"{len(df):,} 건")
+            st.metric("총 데이터", f"{len(env_df):,} 건")
             st.metric("분석 기간", f"{df.index.min().year} ~ {df.index.max().year}")
 
         if df is not None:
             st.success("연결 성공!")
-            st.metric("총 데이터", f"{len(df):,} 건")
+            st.metric("총 데이터", f"{len(env_df):,} 건")
             st.metric("분석 기간", f"{df.index.min().year} ~ {df.index.max().year}")
         else:
             st.error("데이터 없음")
@@ -286,4 +285,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
