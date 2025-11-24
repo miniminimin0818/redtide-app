@@ -32,7 +32,7 @@ else: # Linux (Colab, Streamlit Cloud)
 plt.rcParams['axes.unicode_minus'] = False
 
 # -----------------------------------------------------------------------------
-# 3. 데이터 로드 함수 (환경 데이터 + 적조 발생 데이터)
+# 3. 데이터 로드 함수
 # -----------------------------------------------------------------------------
 @st.cache_data
 def load_all_data():
@@ -76,29 +76,30 @@ def load_all_data():
     return env_df, occur_df
 
 # -----------------------------------------------------------------------------
-# 4. 적조 위험도 진단 로직 (사용자 지정 로직 적용)
+# 4. 적조 위험도 진단 로직 (사용자 지정 로직 유지)
 # -----------------------------------------------------------------------------
 def assess_red_tide_risk(temp, salt):
     risk_score = 0
     reasons = []
 
     # --- 수온 평가 ---
-    if temp == 20:
+    # (사용자님이 지정하신 정확한 로직 유지)
+    if 20 == temp:
         risk_score += 70
-        reasons.append("🌡️ **최적수온(20℃)**: 적조 생물 증식에 최적입니다.")
-    elif temp == 25:
+        reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
+    elif 25 == temp:
         risk_score += 70
-        reasons.append("🌡️ **최적수온(25℃)**: 적조 생물 증식에 최적입니다.")
-    elif temp == 27.5:
+        reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
+    elif 27.5 == temp:
         risk_score += 70
-        reasons.append("🌡️ **최적수온(27.5℃)**: 적조 생물 증식에 최적입니다.")
+        reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
     elif 21 <= temp <= 24.9:
         risk_score += 60
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif 25.1 <= temp <= 27.4:
         risk_score += 60
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
-    elif 27.6 <= temp <= 29.9:
+    elif 27.6 <= temp <= 30:
         risk_score += 60
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif temp >= 30:
@@ -124,18 +125,18 @@ def assess_red_tide_risk(temp, salt):
 
     # --- 최종 진단 ---
     if risk_score >= 90:
-        return "🚨 매우 위험 (적조 대발생 가능)", "red", risk_score, reasons
+        return "🚨 매우 위험 (적조 대발생 가능)", "red", reasons
     elif risk_score >= 50:
-        return "⚠️ 주의 (적조 발생 가능 조건 충족)", "orange", risk_score, reasons
+        return "⚠️ 주의 (적조 발생 가능 조건 충족)", "orange", reasons
     else:
-        return "✅ 안전 (적조 발생 확률 낮음)", "green", risk_score, reasons
+        return "✅ 안전 (적조 발생 확률 낮음)", "green", reasons
 
 # -----------------------------------------------------------------------------
 # 5. 메인 화면 구성
 # -----------------------------------------------------------------------------
 def main():
     st.title("🌊 통영 적조 예측 및 분석 시스템")
-    st.markdown("##### 지난 25년간(2000-2024)의 통영 조위관측소 빅데이터 및 실제 적조 발생 이력 기반")
+    st.markdown("##### 지난 23년간(2001-2023)의 통영 조위관측소 빅데이터 및 실제 적조 발생 이력 기반")
     
     with st.sidebar:
         st.header("데이터 현황")
@@ -153,19 +154,17 @@ def main():
         else:
             st.warning("적조 발생 데이터 없음 (밀도 시각화 불가)")
 
-    # 탭 구성 (4개 탭)
-    tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "🌡️ 수온별 예측", "📊 데이터 분포"])
+    # 탭 구성
+    tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 조회", "🔮 미래 날짜 예측", "🌡️ 수온별 예측", "📊 데이터 분포"])
 
-    # -------------------------------------------------------------------------
     # [탭 1] 과거 날짜 조회
-    # -------------------------------------------------------------------------
     with tab1:
         st.subheader("과거 바다 상태 조회")
         col1, col2 = st.columns([1, 2])
         with col1:
             min_d, max_d = env_df.index.min().date(), env_df.index.max().date()
             # 기본값: 데이터에 존재하는 안전한 날짜
-            default_d = pd.to_datetime("2022-08-15").date() 
+            default_d = pd.to_datetime("2005-08-18").date() 
             input_date = st.date_input("과거 날짜 선택", value=default_d, min_value=min_d, max_value=max_d)
             btn_query = st.button("조회하기", type="primary", key='btn1', use_container_width=True)
 
@@ -174,13 +173,13 @@ def main():
                 target_data = env_df[env_df.index.date == input_date]
                 if len(target_data) > 0:
                     avg_t, avg_s = target_data['Temp'].mean(), target_data['Salt'].mean()
-                    level, color, score, reasons = assess_red_tide_risk(avg_t, avg_s)
+                    level, color, reasons = assess_red_tide_risk(avg_t, avg_s)
                     
                     st.markdown(f"### {input_date} 분석 결과")
                     m1, m2, m3 = st.columns(3)
                     m1.metric("수온", f"{avg_t:.2f} ℃")
                     m2.metric("염분", f"{avg_s:.2f} psu")
-                    m3.metric("위험 점수", f"{score} 점")
+                    # m3.metric("위험 점수", f"{score} 점") # 함수 리턴값에 점수 없음
                     
                     st.markdown(f"#### 진단: :{color}[{level}]")
                     with st.expander("상세 진단 근거 보기", expanded=True):
@@ -188,30 +187,26 @@ def main():
                 else:
                     st.warning("해당 날짜의 데이터가 없습니다.")
 
-    # -------------------------------------------------------------------------
     # [탭 2] 미래 날짜 예측
-    # -------------------------------------------------------------------------
     with tab2:
-        st.subheader("미래 날짜 예측")
-        st.info("과거 25년간 해당 날짜들의 평균값(평년값)을 분석하여 미래의 수온과 염분을 예측합니다.")
+        st.subheader("미래 시점 예측 (평년 기후 기반)")
+        st.info("과거 23년간 해당 날짜들의 평균값(평년값)을 분석하여 미래의 수온과 염분을 예측합니다.")
         
         col_in, col_out = st.columns([1, 2])
         with col_in:
             # 미래 날짜는 제한 없이 선택 가능
-            future_date = st.date_input("미래 날짜 선택", value=pd.to_datetime("today").date())
+            future_date = st.date_input("미래 날짜 선택", value=pd.to_datetime("2025-08-15").date())
             btn_future = st.button("미래 예측 실행", type="primary", key='btn_future', use_container_width=True)
         
         with col_out:
             if btn_future:
-                # 월-일(MM-DD) 추출하여 과거 동일 날짜 데이터 조회
                 target_md = future_date.strftime('%m-%d')
                 historical_samples = env_df[env_df['MM-DD'] == target_md]
                 
                 if len(historical_samples) > 0:
                     pred_t = historical_samples['Temp'].mean()
                     pred_s = historical_samples['Salt'].mean()
-                    
-                    level, color, score, reasons = assess_red_tide_risk(pred_t, pred_s)
+                    level, color, reasons = assess_red_tide_risk(pred_t, pred_s)
                     
                     st.markdown(f"### 🔮 {future_date} 예측 결과")
                     c1, c2 = st.columns(2)
@@ -220,92 +215,75 @@ def main():
                     
                     st.markdown(f"#### 예측 진단: :{color}[{level}]")
                     st.caption(f"* 과거 {len(historical_samples)}개 연도의 {target_md} 데이터를 기반으로 분석했습니다.")
-                    
                     with st.expander("상세 진단 근거"):
                         for r in reasons: st.write(f"- {r}")
                 else:
                     st.error("해당 날짜의 과거 통계 데이터가 부족합니다.")
 
-    # -------------------------------------------------------------------------
-    # [탭 3] 수온별 염분 예측
-    # -------------------------------------------------------------------------
+    # [탭 3] 수온별 예측
     with tab3:
-        st.subheader("수온 입력 기반 염분 예측")
-        
+        st.subheader("수온 입력 기반 예측")
         col_in, col_out = st.columns([1, 2])
         with col_in:
             input_temp = st.number_input("가상 수온 입력 (℃)", value=25.5, step=0.1)
             btn_predict = st.button("예측 및 유사도 분석", type="primary", key='btn2', use_container_width=True)
 
         if btn_predict:
-            # 1. 선형 회귀 (염분 예측)
             X = env_df[['Temp']]
             y = env_df['Salt']
             model = LinearRegression()
             model.fit(X, y)
             pred_salt = model.predict([[input_temp]])[0]
             
-            # 공식 표시용
-            slope = model.coef_[0]
-            intercept = model.intercept_
-            formula = f"Temp \\times {slope:.2f} + {intercept:.2f}"
-            
-            level, color, score, reasons = assess_red_tide_risk(input_temp, pred_salt)
+            level, color, reasons = assess_red_tide_risk(input_temp, pred_salt)
             
             with col_out:
                 st.markdown("### 1. 예측 결과")
                 c1, c2 = st.columns(2)
                 c1.metric("예상 염분", f"{pred_salt:.2f} psu")
-                c2.metric("위험 점수", f"{score} 점")
-                
-                st.latex(f"Salt_{{predicted}} = {formula}")
                 
                 st.markdown(f"#### 진단: :{color}[{level}]")
                 st.info("💡 **분석 근거:**\n\n" + "\n".join([f"- {r}" for r in reasons]))
 
                 st.divider()
                 
-                # 요청사항 2번: 유사도 확인 (Euclidean Distance)
+                # 유사도 확인
                 st.markdown("### 2. 과거 유사 사례 (Top 5)")
                 st.caption(f"수온 {input_temp}℃, 염분 {pred_salt:.2f}psu와 가장 환경이 비슷했던 과거 날짜들입니다.")
                 
-                # 거리 계산: (T차이^2 + S차이^2)
                 env_df['Similarity'] = (env_df['Temp'] - input_temp)**2 + (env_df['Salt'] - pred_salt)**2
                 top5 = env_df.sort_values('Similarity').head(5)
-                
-                # 결과 표시
                 st.dataframe(top5[['Temp', 'Salt']], use_container_width=True)
 
-    # -------------------------------------------------------------------------
     # [탭 4] 데이터 시각화
-    # -------------------------------------------------------------------------
     with tab4:
         st.subheader("통영 해역 수온-염분 분포")
         
         if st.checkbox("그래프 보기", value=True):
             fig, ax = plt.subplots(figsize=(10, 6))
             
-            # 1. 배경 데이터 (일반 환경) - 회색
+            # 1. 배경 데이터 (일반 환경)
             bg_sample = env_df.sample(min(len(env_df), 5000))
             sns.scatterplot(data=bg_sample, x='Temp', y='Salt', color='lightgrey', alpha=0.3, s=10, ax=ax, label='일반 환경')
 
-            # 2. 적조 발생 데이터 (강조) - 색상/크기
+            # 2. 적조 발생 데이터 (강조)
             if occur_df is not None and not occur_df.empty:
                 sizes = np.log1p(occur_df['Density']) * 10 
+                # [수정됨] label='적조 발생' 제거하여 TypeError 방지 (hue와 label 동시 사용 시 충돌 발생 가능성 해결)
                 sns.scatterplot(data=occur_df, x='Temp', y='Salt', hue='Density', size=sizes, sizes=(20, 300), 
-                                palette='Reds', edgecolor='black', alpha=0.8, ax=ax, label='적조 발생')
+                                palette='Reds', edgecolor='black', alpha=0.8, ax=ax)
                 st.success("✅ 적조 발생 데이터(redtide_occurrences.csv)를 반영하여 밀도를 시각화했습니다.")
             else:
                 st.info("ℹ️ 적조 발생 데이터가 없어 일반 환경만 표시합니다.")
 
             # 위험 구간 박스
             import matplotlib.patches as patches
-            rect = patches.Rectangle((20, 31), 10, 3, linewidth=2, edgecolor='red', facecolor='none', label='High Risk Zone')
+            rect = patches.Rectangle((20, 31), 10, 3, linewidth=2, edgecolor='red', facecolor='none', label='Red Tide Zone')
             ax.add_patch(rect)
             
             ax.set_xlabel("Temp (℃)")
             ax.set_ylabel("Salt (psu)")
-            ax.legend(loc='upper right')
+            ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1))
             ax.grid(True, alpha=0.3)
             st.pyplot(fig)
 
