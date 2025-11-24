@@ -264,21 +264,19 @@ def main():
             
             # 1. 배경 데이터 (일반 환경)
             bg_sample = env_df.sample(min(len(env_df), 5000))
-            sns.scatterplot(data=bg_sample, x='Temp', y='Salt', color='lightgrey', alpha=0.3, s=10, ax=ax, label='일반 환경')
+            sns.scatterplot(data=bg_sample, x='Temp', y='Salt', color='lightgrey', alpha=0.3, s=10, ax=ax, label='Temp·Salt')
 
             # 2. 적조 발생 데이터 (강조)
             if occur_df is not None and not occur_df.empty:
                 sizes = np.log1p(occur_df['Density']) * 10 
-                # [수정됨] label='적조 발생' 제거하여 TypeError 방지 (hue와 label 동시 사용 시 충돌 발생 가능성 해결)
                 sns.scatterplot(data=occur_df, x='Temp', y='Salt', hue='Density', size=sizes, sizes=(20, 300), 
                                 palette='Reds', edgecolor='black', alpha=0.8, ax=ax)
-                st.success("✅ 적조 발생 데이터(redtide_occurrences.csv)를 반영하여 밀도를 시각화했습니다.")
             else:
                 st.info("ℹ️ 적조 발생 데이터가 없어 일반 환경만 표시합니다.")
 
             # 위험 구간 박스
             import matplotlib.patches as patches
-            rect = patches.Rectangle((20, 31), 10, 3, linewidth=2, edgecolor='red', facecolor='none', label='Red Tide Zone')
+            rect = patches.Rectangle((20, 30), 13, 3, linewidth=2, edgecolor='red', facecolor='none', label='Red Tide Optimum')
             ax.add_patch(rect)
             
             ax.set_xlabel("Temp (℃)")
@@ -289,3 +287,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
