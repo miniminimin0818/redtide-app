@@ -277,7 +277,7 @@ def main():
 
             # 위험 구간 박스
             import matplotlib.patches as patches
-            rect = patches.Rectangle((20, 30), 13, 3, linewidth=2, edgecolor='red', facecolor='none', label='Red Tide Optimum')
+            rect = patches.Rectangle((20, 30), 10, 4, linewidth=3, edgecolor='red', facecolor='none', label='Red Tide Optimum')
             ax.add_patch(rect)
             
             ax.set_xlabel("Temp (℃)")
@@ -288,6 +288,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
