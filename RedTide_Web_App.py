@@ -91,13 +91,13 @@ def assess_red_tide_risk(temp, salt):
         risk_score += 70
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
     elif 21 <= temp <= 24.9:
-        risk_score += 55
+        risk_score += 50
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif 25.1 <= temp <= 27.4:
         risk_score += 55
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif 27.6 <= temp <= 30:
-        risk_score += 55
+        risk_score += 65
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif temp >= 30:
         risk_score -= 20
@@ -121,9 +121,9 @@ def assess_red_tide_risk(temp, salt):
         reasons.append("🧂 **염분**: 적조 발생 최적 범위를 벗어났습니다.")
 
     # --- 최종 진단 ---
-    if risk_score >= 90:
+    if risk_score >= 85:
         return "🚨 매우 위험 (적조 대발생 가능)", "red", reasons
-    elif risk_score >= 50:
+    elif risk_score >= 40:
         return "⚠️ 주의 (적조 발생 가능 조건 충족)", "orange", reasons
     else:
         return "✅ 안전 (적조 발생 확률 낮음)", "green", reasons
@@ -288,6 +288,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
