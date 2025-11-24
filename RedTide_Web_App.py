@@ -36,11 +36,9 @@ plt.rcParams['axes.unicode_minus'] = False
 # -----------------------------------------------------------------------------
 @st.cache_data
 def load_all_data():
-    # 파일 경로 후보 (로컬, 코랩, 구글 드라이브)
     paths = [
         ".", 
-        "/content", 
-        "/content/drive/MyDrive/redtide_project"
+        "/content",
     ]
     
     env_df = None   # 일반 환경 데이터 (tongyeong_lite.csv)
@@ -85,28 +83,28 @@ def assess_red_tide_risk(temp, salt):
     # --- 수온 평가 ---
     # (사용자님이 지정하신 정확한 로직 유지)
     if 20 == temp:
-        risk_score += 70
+        risk_score += 60
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
     elif 25 == temp:
-        risk_score += 70
+        risk_score += 60
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
     elif 27.5 == temp:
-        risk_score += 70
+        risk_score += 60
         reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
     elif 21 <= temp <= 24.9:
-        risk_score += 60
+        risk_score += 50
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif 25.1 <= temp <= 27.4:
-        risk_score += 60
+        risk_score += 50
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif 27.6 <= temp <= 30:
-        risk_score += 60
+        risk_score += 50
         reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
     elif temp >= 30:
-        risk_score += 30
+        risk_score += 10
         reasons.append("🌡️ **고온(30℃↑)**: 적조 생물 성장이 확연히 저하됩니다.")
     elif temp <= 15:
-        risk_score -= 30
+        risk_score -= 20
         reasons.append("❄️ **과저수온(15℃↓)**: 적조 생물 성장이 확연히 저하됩니다.")
     else:
         risk_score -= 20
@@ -117,7 +115,7 @@ def assess_red_tide_risk(temp, salt):
         risk_score += 60
         reasons.append("🧂 **염분(31~34psu)**: 적조 생물 증식에 최적입니다.")        
     elif salt <= 20:
-        risk_score -= 30
+        risk_score -= 20
         reasons.append("🧂 **저염분(20psu↓)**: 염분이 너무 낮아 적조 생물의 성장이 특히 저하됩니다.")
     else:
         risk_score -= 20
@@ -136,7 +134,7 @@ def assess_red_tide_risk(temp, salt):
 # -----------------------------------------------------------------------------
 def main():
     st.title("🌊 통영 적조 예측 및 분석 시스템")
-    st.markdown("##### 지난 23년간(2001-2023)의 통영 조위관측소 빅데이터 및 실제 적조 발생 이력 기반")
+    st.markdown("##### 지난 25년간(2000-2024)의 통영 조위관측소 데이터 및 실제 적조 발생 이력 기반")
     
     with st.sidebar:
         st.header("데이터 현황")
@@ -155,7 +153,7 @@ def main():
             st.warning("적조 발생 데이터 없음 (밀도 시각화 불가)")
 
     # 탭 구성
-    tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 조회", "🔮 미래 날짜 예측", "🌡️ 수온별 예측", "📊 데이터 분포"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "🌡️ 수온별 염분 예측", "📊 데이터 분포"])
 
     # [탭 1] 과거 날짜 조회
     with tab1:
@@ -189,13 +187,13 @@ def main():
 
     # [탭 2] 미래 날짜 예측
     with tab2:
-        st.subheader("미래 시점 예측 (평년 기후 기반)")
-        st.info("과거 23년간 해당 날짜들의 평균값(평년값)을 분석하여 미래의 수온과 염분을 예측합니다.")
+        st.subheader("미래 시점 예측")
+        st.info("과거 25년간 해당 날짜들의 평균값을 분석하여 미래의 수온과 염분을 예측합니다.")
         
         col_in, col_out = st.columns([1, 2])
         with col_in:
             # 미래 날짜는 제한 없이 선택 가능
-            future_date = st.date_input("미래 날짜 선택", value=pd.to_datetime("2025-08-15").date())
+            future_date = st.date_input("미래 날짜 선택", value=pd.to_datetime("today").date())
             btn_future = st.button("미래 예측 실행", type="primary", key='btn_future', use_container_width=True)
         
         with col_out:
@@ -222,7 +220,7 @@ def main():
 
     # [탭 3] 수온별 예측
     with tab3:
-        st.subheader("수온 입력 기반 예측")
+        st.subheader("수온별 염분 예측")
         col_in, col_out = st.columns([1, 2])
         with col_in:
             input_temp = st.number_input("가상 수온 입력 (℃)", value=25.5, step=0.1)
@@ -257,7 +255,7 @@ def main():
 
     # [탭 4] 데이터 시각화
     with tab4:
-        st.subheader("통영 해역 수온-염분 분포")
+        st.subheader("통영 해역 수온·염분 분포")
         
         if st.checkbox("그래프 보기", value=True):
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -287,5 +285,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
