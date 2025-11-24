@@ -140,12 +140,12 @@ def main():
         with st.spinner("데이터 로딩 중..."):
             env_df, occur_df = load_all_data()
             st.metric("총 데이터", f"{len(env_df):,} 건")
-            st.metric("분석 기간", f"{df.index.min().year} ~ {df.index.max().year}")
+            st.metric("분석 기간", f"{evn_df.index.min().year} ~ {env_df.index.max().year}")
 
         if df is not None:
             st.success("연결 성공!")
             st.metric("총 데이터", f"{len(env_df):,} 건")
-            st.metric("분석 기간", f"{df.index.min().year} ~ {df.index.max().year}")
+            st.metric("분석 기간", f"{env_df.index.min().year} ~ {env_df.index.max().year}")
         else:
             st.error("데이터 없음")
             st.warning("tongyeong_lite.csv 파일을 찾을 수 없습니다.")
@@ -285,3 +285,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
