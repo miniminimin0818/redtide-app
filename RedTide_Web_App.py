@@ -140,17 +140,22 @@ def main():
         with st.spinner("데이터 로딩 중..."):
             env_df, occur_df = load_all_data()
             st.metric("총 데이터", f"{len(env_df):,} 건")
-            st.metric("분석 기간", f"{2000} ~ {2024}")
+            st.metric("분석 기간", f"{env_df.index.min().year} ~ {env_df.index.max().year}")
 
-        if df is not None:
+        if env_df is not None:
             st.success("연결 성공!")
             st.metric("총 데이터", f"{len(env_df):,} 건")
-            st.metric("분석 기간", f"{2000} ~ {2024}")
+            st.metric("분석 기간", f"{env_df.index.min().year} ~ {env_df.index.max().year}")
+            st.info("현재 'tongyeong_lite.csv' 데이터를 사용 중입니다.")
         else:
             st.error("데이터 없음")
             st.warning("tongyeong_lite.csv 파일을 찾을 수 없습니다.")
             st.stop()
-
+            
+        if occur_df is not None:
+            st.success(f"적조 발생 데이터 연결됨 ({len(occur_df):,}건)")
+        else:
+            st.warning("적조 발생 데이터 없음 (밀도 시각화 불가)")
 
     # 탭 구성
     tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "🌡️ 수온별 염분 예측", "📊 데이터 분포"])
@@ -285,5 +290,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
