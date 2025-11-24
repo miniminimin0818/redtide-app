@@ -139,8 +139,6 @@ def main():
         st.header("데이터 현황")
         with st.spinner("데이터 로딩 중..."):
             env_df, occur_df = load_all_data()
-            st.metric("총 데이터", f"{len(env_df):,} 건")
-            st.metric("분석 기간", f"{env_df.index.min().year} ~ {env_df.index.max().year}")
 
         if env_df is not None:
             st.success("연결 성공!")
@@ -290,3 +288,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
