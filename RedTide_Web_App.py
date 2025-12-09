@@ -269,13 +269,6 @@ def main():
 
             # 2. 적조 발생 데이터 (강조)
             if occur_df is not None and not occur_df.empty:
-                sizes = np.log1p(occur_df['Density']) * 10 
-                sns.scatterplot(data=occur_df, x='Temp', y='Salt', hue='Density', size=sizes, sizes=(20, 300), 
-                                palette='Reds', edgecolor='black', alpha=0.8, ax=ax)
-            else:
-                st.info("ℹ️ 적조 발생 데이터가 없어 일반 환경만 표시합니다.")
-            # 2. 적조 발생 데이터 시각화
-            if occur_df is not None and not occur_df.empty:
                 target_df = occur_df[occur_df['Density'] > 0].copy()
                 if not target_df.empty:
             
@@ -314,6 +307,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
