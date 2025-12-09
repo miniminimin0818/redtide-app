@@ -279,16 +279,26 @@ def main():
                 target_df = occur_df[occur_df['Density'] > 0].copy()
                 if not target_df.empty:
             
-            sizes = np.log1p(target_df['Density']) * 10 
-            legend=False
-            points = sns.scatterplot(data=target_df, x='Temp', y='Salt', hue='Density', size=sizes, sizes=(20, 300), palette='Reds', edgecolor='black', alpha=0.8, ax=ax, legend=False)
+                    sizes = np.log1p(target_df['Density']) * 10 
+                    legend=False
+                    points = sns.scatterplot(
+                        data=target_df,
+                        x='Temp',
+                        y='Salt',
+                        hue='Density',
+                        size=sizes,
+                        sizes=(20, 300),
+                        palette='Reds',
+                        edgecolor='black',
+                        alpha=0.8, ax=ax,
+                        legend=False)
             
-            norm = plt.Normalize(target_df['Density'].min(), target_df['Density'].max())
-            sm = plt.cm.ScalarMappable(cmap="Reds", norm=norm)
-            sm.set_array([])
+                    norm = plt.Normalize(target_df['Density'].min(), target_df['Density'].max())
+                    sm = plt.cm.ScalarMappable(cmap="Reds", norm=norm)
+                    sm.set_array([])
 
-            cbar = plt.colorbar(sm, ax=ax)
-            cbar.set_label('Red Tide Density (cells/mL)', rotation=270, labelpad=15)
+                    cbar = plt.colorbar(sm, ax=ax)
+                    cbar.set_label('Red Tide Density (cells/mL)', rotation=270, labelpad=15)
     
 
             # 위험 구간 박스
@@ -304,6 +314,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
