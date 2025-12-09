@@ -274,6 +274,22 @@ def main():
                                 palette='Reds', edgecolor='black', alpha=0.8, ax=ax)
             else:
                 st.info("ℹ️ 적조 발생 데이터가 없어 일반 환경만 표시합니다.")
+            # 2. 적조 발생 데이터 시각화
+            if occur_df is not None and not occur_df.empty:
+                target_df = occur_df[occur_df['Density'] > 0].copy()
+                if not target_df.empty:
+            
+            sizes = np.log1p(target_df['Density']) * 10 
+            legend=False
+            points = sns.scatterplot(data=target_df, x='Temp', y='Salt', hue='Density', size=sizes, sizes=(20, 300), palette='Reds', edgecolor='black', alpha=0.8, ax=ax, legend=False)
+            
+            norm = plt.Normalize(target_df['Density'].min(), target_df['Density'].max())
+            sm = plt.cm.ScalarMappable(cmap="Reds", norm=norm)
+            sm.set_array([])
+
+            cbar = plt.colorbar(sm, ax=ax)
+            cbar.set_label('Red Tide Density (cells/mL)', rotation=270, labelpad=15)
+    
 
             # 위험 구간 박스
             import matplotlib.patches as patches
@@ -288,6 +304,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
