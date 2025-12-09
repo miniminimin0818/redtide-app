@@ -265,6 +265,7 @@ def main():
             
             # 1. 배경 데이터 (일반 환경)
             bg_sample = env_df.sample(min(len(env_df), 5000))
+            sns.scatterplot(data=bg_sample, x='Temp', y='Salt', color='lightgrey', alpha=0.3, s=10, ax=ax)
 
             # 2. 적조 발생 데이터 (강조)
             if occur_df is not None and not occur_df.empty:
@@ -295,7 +296,7 @@ def main():
 
             # 위험 구간 박스
             import matplotlib.patches as patches
-            rect = patches.Rectangle((20, 30), 10, 4, linewidth=3, edgecolor='red', facecolor='none', label='Red Tide Optimum')
+            rect = patches.Rectangle((20, 30), 10, 4, linewidth=3, edgecolor='red', facecolor='none')
             ax.add_patch(rect)
             
             ax.set_xlabel("Temp (℃)")
@@ -306,6 +307,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
