@@ -265,7 +265,6 @@ def main():
             
             # 1. 배경 데이터 (일반 환경)
             bg_sample = env_df.sample(min(len(env_df), 5000))
-            sns.scatterplot(data=bg_sample, x='Temp', y='Salt', color='lightgrey', alpha=0.3, s=10, ax=ax, label='Temp·Salt')
 
             # 2. 적조 발생 데이터 (강조)
             if occur_df is not None and not occur_df.empty:
@@ -307,6 +306,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
