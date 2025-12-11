@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.linear_model
-import LinearRegression
+from sklearn.linear_model import LinearRegression
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -330,6 +329,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
