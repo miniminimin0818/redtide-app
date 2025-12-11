@@ -146,7 +146,7 @@ def main():
             st.success("연결 성공!")
             st.metric("총 데이터", f"{len(env_df):,} 건")
             st.metric("분석 기간", f"{env_df.index.min().year} ~ {env_df.index.max().year}")
-            st.info("현재 'tongyeong_lite.csv' 데이터를 사용 중입니다.")
+            st.info("현재 '국립해양조사원 바다누리 해양정보 서비스 통영 조위관측소', '국립수산과학원 적조 속보 데이터' 데이터를 사용 중입니다.")
         else:
             st.error("데이터 없음")
             st.warning("tongyeong_lite.csv 파일을 찾을 수 없습니다.")
@@ -325,6 +325,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
