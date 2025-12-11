@@ -263,7 +263,7 @@ def main():
         st.subheader("통영 해역 수온·염분 분포와 적조 밀도")
         
         if st.checkbox("그래프 보기", value=True):
-            fig, ax = plt.subplots(figsize=(8, 4))
+            fig, ax = plt.subplots(figsize=(10, 5))
             
             # 1. 데이터 병합
             bg_sample = env_df.sample(min(len(env_df), 5000)).copy()    
@@ -294,7 +294,7 @@ def main():
                 y='Salt',
                 hue='Density',
                 size='Size_Scale',
-                sizes=(30, 800),
+                sizes=(30, 650),
                 palette=custom_cmap,
                 edgecolor='black',
                 linewidth=0.5,
@@ -325,6 +325,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
