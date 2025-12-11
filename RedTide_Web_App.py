@@ -265,67 +265,41 @@ def main():
         if st.checkbox("그래프 보기", value=True):
             fig, ax = plt.subplots(figsize=(10, 6))
             
-            # ----------------------------------------------------------------
-            # 1. 데이터 병합 (배경=0, 적조=실제값)
-            # ----------------------------------------------------------------
-            # (1) 배경 데이터: 밀도 0으로 설정
+            # 1. 데이터 병합
             bg_sample = env_df.sample(min(len(env_df), 5000)).copy()    
             bg_sample['Density'] = 0  
-            
-            # (2) 적조 데이터: 실제 밀도값 사용
             if occur_df is not None and not occur_df.empty:
                 target_df = occur_df[occur_df['Density'] > 0].copy()
             else:
                 target_df = pd.DataFrame(columns=bg_sample.columns)
             
-            # (3) 합치기
             total_df = pd.concat([bg_sample, target_df], ignore_index=True)
-            
-            # (4) 정렬: 밀도가 0인(흰색) 점을 먼저 그리고, 큰 점(적조)을 나중에 그려서 위에 덮어쓰게 함
             total_df = total_df.sort_values('Density', ascending=True)
 
-            # ----------------------------------------------------------------
-            # 2. 시각화 스타일 설정 (색상 & 크기)
-            # ----------------------------------------------------------------
-            
-            # [색상] 0=흰색, 고밀도=빨강
-            # 커스텀 컬러맵 생성
+            # 2. 시각화 스타일 설정
             base_cmap = plt.cm.get_cmap('Reds')
             colors_list = [base_cmap(i) for i in range(base_cmap.N)]
-            colors_list[0] = mcolors.to_rgba('white')  # 0값은 완전한 흰색
+            colors_list[0] = mcolors.to_rgba('white')
             custom_cmap = mcolors.LinearSegmentedColormap.from_list('WhiteRed', colors_list, base_cmap.N)
-
-            # [크기] "크기를 크게 바꾸게" 처리
-            # 적조 밀도 차이가 매우 크므로(10 ~ 1,000,000), 로그를 씌워야 시각적으로 구분이 잘 됩니다.
-            # 하지만 0(배경)은 로그를 씌워도 0이므로 가장 작은 사이즈가 됩니다.
             total_df['Size_Scale'] = np.log1p(total_df['Density']) 
 
-            # ----------------------------------------------------------------
             # 3. 플롯 그리기
-            # ----------------------------------------------------------------
             points = sns.scatterplot(
                 data=total_df,
                 x='Temp',
                 y='Salt',
                 hue='Density',
-                
-                # ★ 핵심 수정: 크기 설정
-                size='Size_Scale',     # 크기 기준 컬럼
-                sizes=(30, 800),       # (최소크기, 최대크기) -> 최대값을 800으로 키워 "왕방울"만하게 만듦
-                
-                palette=custom_cmap,   # 0=흰색, 값큼=빨강
-                edgecolor='black',     # 흰색 점도 잘 보이게 테두리 추가
-                linewidth=0.5,         # 테두리 두께
-                alpha=0.7,             # 투명도
+                size='Size_Scale',
+                sizes=(30, 800),
+                palette=custom_cmap,
+                edgecolor='black',
+                linewidth=0.5,
+                alpha=0.7,
                 ax=ax,
-                legend=False           # 기본 범례 끄기 (컬러바로 대체)
+                legend=False
             )
-
-            # ----------------------------------------------------------------
-            # 4. 부가 요소 (컬러바, 위험구역 박스)
-            # ----------------------------------------------------------------
             
-            # 컬러바
+            # 4. 부가 요소 (컬러바, 위험구역 박스)
             norm = plt.Normalize(vmin=0, vmax=total_df['Density'].max())
             sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
             sm.set_array([])
@@ -348,6 +322,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
