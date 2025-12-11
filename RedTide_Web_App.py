@@ -259,6 +259,7 @@ def main():
     # [탭 4] 데이터 시각화
     with tab4:
         st.subheader("통영 해역 수온·염분 분포")
+        import matplotlib.colors as mcolors
         
         if st.checkbox("그래프 보기", value=True):
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -327,6 +328,7 @@ def main():
             st.pyplot(fig)
 
 if __name__ == "__main__":
+
     main()
 
 
