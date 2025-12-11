@@ -260,71 +260,88 @@ def main():
     
     # [탭 4] 데이터 시각화
     with tab4:
-        st.subheader("통영 해역 수온·염분 분포")
+        st.subheader("통영 해역 수온·염분 분포와 적조 밀도")
         
         if st.checkbox("그래프 보기", value=True):
             fig, ax = plt.subplots(figsize=(10, 6))
             
-            # 1. 데이터 병합 및 전처리 (Data Preparation)
-            # (1) 배경 데이터 준비: Density 컬럼을 추가하고 0으로 설정
+            # ----------------------------------------------------------------
+            # 1. 데이터 병합 (배경=0, 적조=실제값)
+            # ----------------------------------------------------------------
+            # (1) 배경 데이터: 밀도 0으로 설정
             bg_sample = env_df.sample(min(len(env_df), 5000)).copy()    
-            bg_sample['Density'] = 0  # 적조 없음 = 밀도 0
-
-            # (2) 적조 발생 데이터 준비
+            bg_sample['Density'] = 0  
+            
+            # (2) 적조 데이터: 실제 밀도값 사용
             if occur_df is not None and not occur_df.empty:
                 target_df = occur_df[occur_df['Density'] > 0].copy()
             else:
                 target_df = pd.DataFrame(columns=bg_sample.columns)
             
-            # (3) 데이터 합치기 (Concatenate)
+            # (3) 합치기
             total_df = pd.concat([bg_sample, target_df], ignore_index=True)
-
-            # (4) 정렬: 밀도가 낮은 점(0/회색)이 밑에 깔리고, 높은 점(빨강)이 위에 오도록 정렬
+            
+            # (4) 정렬: 밀도가 0인(흰색) 점을 먼저 그리고, 큰 점(적조)을 나중에 그려서 위에 덮어쓰게 함
             total_df = total_df.sort_values('Density', ascending=True)
-            
-            # 2. 시각화 설정 (Custom Visualization)
-            base_cmap = plt.cm.get_cmap('Reds')
-            colors = [base_cmap(i) for i in range(base_cmap.N)]
-            colors[0] = mcolors.to_rgba('lightgrey') # 0값(가장 낮은 값)을 회색으로 강제 설정
-            custom_cmap = mcolors.LinearSegmentedColormap.from_list('GreyRed', colors, base_cmap.N)
-            
-            # 사이즈 계산용 컬럼 (로그 스케일 적용)
-            total_df['Size_Scale'] = np.log1p(total_df['Density']) * 10
 
-            # 3. 플롯 그리기 (Plotting)
+            # ----------------------------------------------------------------
+            # 2. 시각화 스타일 설정 (색상 & 크기)
+            # ----------------------------------------------------------------
+            
+            # [색상] 0=흰색, 고밀도=빨강
+            # 커스텀 컬러맵 생성
+            base_cmap = plt.cm.get_cmap('Reds')
+            colors_list = [base_cmap(i) for i in range(base_cmap.N)]
+            colors_list[0] = mcolors.to_rgba('white')  # 0값은 완전한 흰색
+            custom_cmap = mcolors.LinearSegmentedColormap.from_list('WhiteRed', colors_list, base_cmap.N)
+
+            # [크기] "크기를 크게 바꾸게" 처리
+            # 적조 밀도 차이가 매우 크므로(10 ~ 1,000,000), 로그를 씌워야 시각적으로 구분이 잘 됩니다.
+            # 하지만 0(배경)은 로그를 씌워도 0이므로 가장 작은 사이즈가 됩니다.
+            total_df['Size_Scale'] = np.log1p(total_df['Density']) 
+
+            # ----------------------------------------------------------------
+            # 3. 플롯 그리기
+            # ----------------------------------------------------------------
             points = sns.scatterplot(
                 data=total_df,
                 x='Temp',
                 y='Salt',
                 hue='Density',
-                size='Size_Scale',
-                sizes=(20, 300),
-                palette=custom_cmap,
-                edgecolor='black',
-                linewidth=0.3,
-                alpha=0.7,
+                
+                # ★ 핵심 수정: 크기 설정
+                size='Size_Scale',     # 크기 기준 컬럼
+                sizes=(30, 800),       # (최소크기, 최대크기) -> 최대값을 800으로 키워 "왕방울"만하게 만듦
+                
+                palette=custom_cmap,   # 0=흰색, 값큼=빨강
+                edgecolor='black',     # 흰색 점도 잘 보이게 테두리 추가
+                linewidth=0.5,         # 테두리 두께
+                alpha=0.7,             # 투명도
                 ax=ax,
-                legend=False
+                legend=False           # 기본 범례 끄기 (컬러바로 대체)
             )
 
-            # 4. 컬러바 추가 (Colorbar)
+            # ----------------------------------------------------------------
+            # 4. 부가 요소 (컬러바, 위험구역 박스)
+            # ----------------------------------------------------------------
+            
+            # 컬러바
             norm = plt.Normalize(vmin=0, vmax=total_df['Density'].max())
             sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
             sm.set_array([])
-
             cbar = plt.colorbar(sm, ax=ax)
-            cbar.set_label('Red Tide Density (cells/mL) \n(Grey=0, Red=High)', rotation=270, labelpad=20)
+            cbar.set_label('Red Tide Density (cells/mL)', rotation=270, labelpad=20)
             
-            # 위험 구간 박스 추가
-            rect = patches.Rectangle((22, 30), 4, 4, linewidth=2, edgecolor='red', facecolor='none')
+            # 위험 구간 박스 (수온 23-28, 염분 30-34 부근 강조)
+            import matplotlib.patches as patches
+            rect = patches.Rectangle((23, 30), 5, 4, linewidth=2, edgecolor='red', facecolor='none', linestyle='--')
             ax.add_patch(rect)
+            ax.text(23.5, 33.5, "High Risk Area", color='red', fontsize=10, fontweight='bold')
             
             ax.set_xlabel("Temp (℃)")
             ax.set_ylabel("Salt (psu)")
             ax.grid(True, alpha=0.3)
-            
-            # (컬러바가 있으므로 범례는 비활성화 처리)
-            # ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1))
+            ax.set_title("수온-염분 분포와 적조 발생 규모", fontsize=15)
             
             st.pyplot(fig)
 
