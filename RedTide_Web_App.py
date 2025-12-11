@@ -263,35 +263,57 @@ def main():
         if st.checkbox("그래프 보기", value=True):
             fig, ax = plt.subplots(figsize=(10, 6))
             
-            # 1. 배경 데이터 (일반 환경)
-            bg_sample = env_df.sample(min(len(env_df), 5000))
-            sns.scatterplot(data=bg_sample, x='Temp', y='Salt', color='lightgrey', alpha=0.3, s=10, ax=ax)
+    # 1. 데이터 병합 및 전처리 (Data Preparation)
+    # (1) 배경 데이터 준비: Density 컬럼을 추가하고 0으로 설정
+    bg_sample = env_df.sample(min(len(env_df), 5000)).copy()    
+    bg_sample['Density'] = 0  # 적조 없음 = 밀도 0
 
-            # 2. 적조 발생 데이터 (강조)
-            if occur_df is not None and not occur_df.empty:
-                target_df = occur_df[occur_df['Density'] > 0].copy()
-                if not target_df.empty:
-            
-                    sizes = np.log1p(target_df['Density']) * 10 
-                    legend=False
-                    points = sns.scatterplot(
-                        data=target_df,
-                        x='Temp',
-                        y='Salt',
-                        hue='Density',
-                        size=sizes,
-                        sizes=(20, 300),
-                        palette='Reds',
-                        edgecolor='black',
-                        alpha=0.8, ax=ax,
-                        legend=False)
-            
-                    norm = plt.Normalize(target_df['Density'].min(), target_df['Density'].max())
-                    sm = plt.cm.ScalarMappable(cmap="Reds", norm=norm)
-                    sm.set_array([])
+    # (2) 적조 발생 데이터 준비
+    if occur_df is not None and not occur_df.empty:
+        target_df = occur_df[occur_df['Density'] > 0].copy()
+    else:
+        target_df = pd.DataFrame(columns=bg_sample.columns)
 
-                    cbar = plt.colorbar(sm, ax=ax)
-                    cbar.set_label('Red Tide Density (cells/mL)', rotation=270, labelpad=15)
+    # (3) 데이터 합치기 (Concatenate)
+    # 배경과 적조 데이터를 하나로 합칩니다.
+    total_df = pd.concat([bg_sample, target_df], ignore_index=True)
+
+    # (4) 정렬 (Sorting)
+    # 밀도가 낮은 점(0/회색)이 밑에 깔리고, 높은 점(빨강)이 위에 오도록 정렬 (중요)
+    total_df = total_df.sort_values('Density', ascending=True)
+
+    # 2. 시각화 설정 (Custom Visualization)
+    base_cmap = plt.cm.get_cmap('Reds')
+    colors = [base_cmap(i) for i in range(base_cmap.N)]
+    colors[0] = mcolors.to_rgba('lightgrey') # 0값(가장 낮은 값)을 회색으로 강제 설정
+    custom_cmap = mcolors.LinearSegmentedColormap.from_list('GreyRed', colors, base_cmap.N)
+
+    # (2) 사이즈 계산용 컬럼 (로그 스케일 적용)
+    total_df['Size_Scale'] = np.log1p(total_df['Density']) * 10
+
+    # 3. 플롯 그리기 (Plotting)
+    points = sns.scatterplot(
+        data=total_df,
+        x='Temp',
+        y='Salt',
+        hue='Density',
+        size='Size_Scale',
+        sizes=(20, 300),
+        palette=custom_cmap,
+        edgecolor='black',
+        linewidth=0.3,
+        alpha=0.7,
+        ax=ax,
+        legend=False
+    )
+
+    # 4. 컬러바 추가 (Colorbar)
+    norm = plt.Normalize(vmin=0, vmax=total_df['Density'].max())
+    sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
+    sm.set_array([])
+
+    cbar = plt.colorbar(sm, ax=ax)
+    cbar.set_label('Red Tide Density (cells/mL) \n(Grey=0, Red=High)', rotation=270, labelpad=20)
     
 
             # 위험 구간 박스
@@ -307,6 +329,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
