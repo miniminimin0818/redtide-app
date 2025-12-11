@@ -314,7 +314,7 @@ def main():
             import matplotlib.patches as patches
             rect = patches.Rectangle((22, 30), 4, 4, linewidth=3, edgecolor='red', facecolor='none', linestyle='--')
             ax.add_patch(rect)
-            ax.text(22, 29, "Red Tide Optimum", color='red', fontsize=12, fontweight='bold')
+            ax.text(22, 28, "Red Tide Optimum", color='red', fontsize=11.5, fontweight='bold')
             
             ax.set_xlabel("Temp (℃)")
             ax.set_ylabel("Salt (psu)")
@@ -325,6 +325,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
