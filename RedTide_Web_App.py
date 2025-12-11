@@ -312,9 +312,9 @@ def main():
             
             # 위험 구간 박스 (수온 23-28, 염분 30-34 부근 강조)
             import matplotlib.patches as patches
-            rect = patches.Rectangle((23, 30), 5, 4, linewidth=2, edgecolor='red', facecolor='none', linestyle='--')
+            rect = patches.Rectangle((22, 30), 3, 4, linewidth=3, edgecolor='red', facecolor='none', linestyle='--')
             ax.add_patch(rect)
-            ax.text(23.5, 33.5, "High Risk Area", color='red', fontsize=10, fontweight='bold')
+            ax.text(22, 29, "Red Tide Optimum", color='red', fontsize=12, fontweight='bold')
             
             ax.set_xlabel("Temp (℃)")
             ax.set_ylabel("Salt (psu)")
@@ -325,6 +325,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
