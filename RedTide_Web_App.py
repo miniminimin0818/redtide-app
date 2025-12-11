@@ -319,13 +319,13 @@ def main():
             ax.set_xlabel("Temp (℃)")
             ax.set_ylabel("Salt (psu)")
             ax.grid(True, alpha=0.3)
-            ax.set_title("수온-염분 분포와 적조 발생 규모", fontsize=15)
             
             st.pyplot(fig)
 
 if __name__ == "__main__":
 
     main()
+
 
 
 
