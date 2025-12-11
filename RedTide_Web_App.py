@@ -316,7 +316,7 @@ def main():
             cbar.set_label('Red Tide Density (cells/mL) \n(Grey=0, Red=High)', rotation=270, labelpad=20)
             
             # 위험 구간 박스 추가
-            rect = patches.Rectangle((23, 30), 5, 4, linewidth=2, edgecolor='red', facecolor='none')
+            rect = patches.Rectangle((22, 30), 4, 4, linewidth=2, edgecolor='red', facecolor='none')
             ax.add_patch(rect)
             
             ax.set_xlabel("Temp (℃)")
@@ -331,6 +331,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
