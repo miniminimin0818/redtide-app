@@ -275,6 +275,10 @@ def main():
             
             total_df = pd.concat([bg_sample, target_df], ignore_index=True)
             total_df = total_df.sort_values('Density', ascending=True)
+            total_df = total_df[
+                (total_df['Temp'] > 0) & (total_df['Temp'] < 35) & 
+                (total_df['Salt'] > 0) & (total_df['Salt'] < 45)
+            ]
 
             # 2. 시각화 스타일 설정
             base_cmap = plt.cm.get_cmap('Reds')
@@ -322,6 +326,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
