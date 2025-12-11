@@ -317,7 +317,7 @@ def main():
     
 
             # 위험 구간 박스
-            import matplotlib.patches as patches
+import matplotlib.patches as patches
             rect = patches.Rectangle((23, 30), 5, 4, linewidth=2, edgecolor='red', facecolor='none')
             ax.add_patch(rect)
             
@@ -329,6 +329,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
