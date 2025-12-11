@@ -255,7 +255,7 @@ def main():
                 env_df['Similarity'] = (env_df['Temp'] - input_temp)**2 + (env_df['Salt'] - pred_salt)**2
                 top5 = env_df.sort_values('Similarity').head(5)
                 st.dataframe(top5[['Temp', 'Salt']], use_container_width=True)
-
+    
     # [탭 4] 데이터 시각화
     with tab4:
         st.subheader("통영 해역 수온·염분 분포")
@@ -263,71 +263,72 @@ def main():
         if st.checkbox("그래프 보기", value=True):
             fig, ax = plt.subplots(figsize=(10, 6))
             
-    # 1. 데이터 병합 및 전처리 (Data Preparation)
-    # (1) 배경 데이터 준비: Density 컬럼을 추가하고 0으로 설정
-        bg_sample = env_df.sample(min(len(env_df), 5000)).copy()    
-        bg_sample['Density'] = 0  # 적조 없음 = 밀도 0
+            # 1. 데이터 병합 및 전처리 (Data Preparation)
+            # (1) 배경 데이터 준비: Density 컬럼을 추가하고 0으로 설정
+            bg_sample = env_df.sample(min(len(env_df), 5000)).copy()    
+            bg_sample['Density'] = 0  # 적조 없음 = 밀도 0
 
-    # (2) 적조 발생 데이터 준비
-        if occur_df is not None and not occur_df.empty:
-            target_df = occur_df[occur_df['Density'] > 0].copy()
-        else:
-            target_df = pd.DataFrame(columns=bg_sample.columns)
-    
-        # (3) 데이터 합치기 (Concatenate)
-        # 배경과 적조 데이터를 하나로 합칩니다.
-        total_df = pd.concat([bg_sample, target_df], ignore_index=True)
+            # (2) 적조 발생 데이터 준비
+            if occur_df is not None and not occur_df.empty:
+                target_df = occur_df[occur_df['Density'] > 0].copy()
+            else:
+                target_df = pd.DataFrame(columns=bg_sample.columns)
+            
+            # (3) 데이터 합치기 (Concatenate)
+            total_df = pd.concat([bg_sample, target_df], ignore_index=True)
 
-        # (4) 정렬 (Sorting)
-        # 밀도가 낮은 점(0/회색)이 밑에 깔리고, 높은 점(빨강)이 위에 오도록 정렬 (중요)
-        total_df = total_df.sort_values('Density', ascending=True)
-    
-        # 2. 시각화 설정 (Custom Visualization)
-        base_cmap = plt.cm.get_cmap('Reds')
-        colors = [base_cmap(i) for i in range(base_cmap.N)]
-        colors[0] = mcolors.to_rgba('lightgrey') # 0값(가장 낮은 값)을 회색으로 강제 설정
-        custom_cmap = mcolors.LinearSegmentedColormap.from_list('GreyRed', colors, base_cmap.N)
-    
-        # (2) 사이즈 계산용 컬럼 (로그 스케일 적용)
-        total_df['Size_Scale'] = np.log1p(total_df['Density']) * 10
+            # (4) 정렬: 밀도가 낮은 점(0/회색)이 밑에 깔리고, 높은 점(빨강)이 위에 오도록 정렬
+            total_df = total_df.sort_values('Density', ascending=True)
+            
+            # 2. 시각화 설정 (Custom Visualization)
+            base_cmap = plt.cm.get_cmap('Reds')
+            colors = [base_cmap(i) for i in range(base_cmap.N)]
+            colors[0] = mcolors.to_rgba('lightgrey') # 0값(가장 낮은 값)을 회색으로 강제 설정
+            custom_cmap = mcolors.LinearSegmentedColormap.from_list('GreyRed', colors, base_cmap.N)
+            
+            # 사이즈 계산용 컬럼 (로그 스케일 적용)
+            total_df['Size_Scale'] = np.log1p(total_df['Density']) * 10
 
-        # 3. 플롯 그리기 (Plotting)
-        points = sns.scatterplot(
-            data=total_df,
-            x='Temp',
-            y='Salt',
-            hue='Density',
-            size='Size_Scale',
-            sizes=(20, 300),
-            palette=custom_cmap,
-            edgecolor='black',
-            linewidth=0.3,
-            alpha=0.7,
-            ax=ax,
-            legend=False
-        )
+            # 3. 플롯 그리기 (Plotting)
+            points = sns.scatterplot(
+                data=total_df,
+                x='Temp',
+                y='Salt',
+                hue='Density',
+                size='Size_Scale',
+                sizes=(20, 300),
+                palette=custom_cmap,
+                edgecolor='black',
+                linewidth=0.3,
+                alpha=0.7,
+                ax=ax,
+                legend=False
+            )
 
-        # 4. 컬러바 추가 (Colorbar)
-        norm = plt.Normalize(vmin=0, vmax=total_df['Density'].max())
-        sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
-        sm.set_array([])
+            # 4. 컬러바 추가 (Colorbar)
+            norm = plt.Normalize(vmin=0, vmax=total_df['Density'].max())
+            sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
+            sm.set_array([])
 
-        cbar = plt.colorbar(sm, ax=ax)
-        cbar.set_label('Red Tide Density (cells/mL) \n(Grey=0, Red=High)', rotation=270, labelpad=20)
-    
-
-        # 위험 구간 박스
-        import matplotlib.patches as patches
-        rect = patches.Rectangle((23, 30), 5, 4, linewidth=2, edgecolor='red', facecolor='none')
-        ax.add_patch(rect)
-        ax.set_xlabel("Temp (℃)")
-        ax.set_ylabel("Salt (psu)")
-        ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1))
-        ax.grid(True, alpha=0.3)
-        st.pyplot(fig)
+            cbar = plt.colorbar(sm, ax=ax)
+            cbar.set_label('Red Tide Density (cells/mL) \n(Grey=0, Red=High)', rotation=270, labelpad=20)
+            
+            # 위험 구간 박스 추가
+            rect = patches.Rectangle((23, 30), 5, 4, linewidth=2, edgecolor='red', facecolor='none')
+            ax.add_patch(rect)
+            
+            ax.set_xlabel("Temp (℃)")
+            ax.set_ylabel("Salt (psu)")
+            ax.grid(True, alpha=0.3)
+            
+            # (컬러바가 있으므로 범례는 비활성화 처리)
+            # ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1))
+            
+            st.pyplot(fig)
 
 if __name__ == "__main__":
     main()
+
 
 
 
