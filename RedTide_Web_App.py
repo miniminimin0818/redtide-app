@@ -344,10 +344,16 @@ def main():
             colors_list = [base_cmap(i) for i in range(base_cmap.N)]
             colors_list[0] = mcolors.to_rgba('white')
             custom_cmap = mcolors.LinearSegmentedColormap.from_list('WhiteRed', colors_list, base_cmap.N)
+            
+            # 확실하게 숫자로 변환
             total_df['Density'] = pd.to_numeric(total_df['Density'], errors='coerce').fillna(0)
-            
-            total_df['Size_Scale'] = np.log1p(total_df['Density']) # 이제 에러 없이 계산됩니다!
-            
+            total_df['Size_Scale'] = np.log1p(total_df['Density'])
+
+            # 💡 [핵심 해결 1] 4번에 있던 색상 기준(norm)을 위로 끌어올립니다.
+            # 데이터가 모두 0일 경우를 대비해 최소한의 최대값(1)을 보장해 에러를 막습니다.
+            max_density = total_df['Density'].max()
+            norm = plt.Normalize(vmin=0, vmax=max_density if max_density > 0 else 1)
+
             # 3. 플롯 그리기
             points = sns.scatterplot(
                 data=total_df,
@@ -357,6 +363,7 @@ def main():
                 size='Size_Scale',
                 sizes=(30, 650),
                 palette=custom_cmap,
+                hue_norm=norm,        # 💡 [핵심 해결 2] Seaborn에게 연속적인 숫자라고 강제로 알려줍니다!
                 edgecolor='black',
                 linewidth=0.5,
                 alpha=0.7,
@@ -365,7 +372,6 @@ def main():
             )
             
             # 4. 부가 요소 (컬러바, 위험구역 박스)
-            norm = plt.Normalize(vmin=0, vmax=total_df['Density'].max())
             sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
             sm.set_array([])
             cbar = plt.colorbar(sm, ax=ax)
@@ -386,6 +392,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
