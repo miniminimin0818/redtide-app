@@ -137,7 +137,6 @@ def main():
         st.header("데이터 현황")
         with st.spinner("데이터 로딩 중..."):
             env_df, occur_df = load_all_data()
-
         if env_df is not None:
             st.success("연결 성공!")
             st.metric("총 데이터", f"{len(env_df):,} 건")
@@ -171,14 +170,17 @@ def main():
             if btn_query:
                 target_data = env_df[env_df.index.date == input_date]
                 if len(target_data) > 0:
-                    avg_t, avg_s = target_data['Temp'].mean(), target_data['Salt'].mean()
-                    level, color, reasons = assess_red_tide_risk(avg_t, avg_s)
+                    # 5개 변수 평균 계산
+                    t, s, wd, ws, td = target_data[['Temp', 'Salt', 'WindDir', 'WindSpeed', 'Tide']].mean()
+                    level, color, reasons = assess_red_tide_risk(t, s, wd, ws, td)
                     
                     st.markdown(f"### {input_date} 분석 결과")
-                    m1, m2, m3 = st.columns(3)
-                    m1.metric("수온", f"{avg_t:.2f} ℃")
-                    m2.metric("염분", f"{avg_s:.2f} psu")
-                    # m3.metric("위험 점수", f"{score} 점") # 함수 리턴값에 점수 없음
+                    m1, m2, m3, m4, m5 = st.columns(5)
+                    m1.metric("수온", f"{t:.2f} ℃")
+                    m2.metric("염분", f"{s:.2f} psu")
+                    m3.metric("풍향", f"{wd:.1f} º")
+                    m4.metric("풍속", f"{ws:.1f} m/s")
+                    m5.metric("조위", f"{td:.0f} cm")
                     
                     st.markdown(f"#### 진단: :{color}[{level}]")
                     with st.expander("상세 진단 근거 보기", expanded=True):
@@ -203,14 +205,17 @@ def main():
                 historical_samples = env_df[env_df['MM-DD'] == target_md]
                 
                 if len(historical_samples) > 0:
-                    pred_t = historical_samples['Temp'].mean()
-                    pred_s = historical_samples['Salt'].mean()
-                    level, color, reasons = assess_red_tide_risk(pred_t, pred_s)
+                    # 5개 변수 평년값 계산
+                    t, s, wd, ws, td = historical_samples[['Temp', 'Salt', 'WindDir', 'WindSpeed', 'Tide']].mean()
+                    level, color, reasons = assess_red_tide_risk(t, s, wd, ws, td)
                     
                     st.markdown(f"### 🔮 {future_date} 예측 결과")
-                    c1, c2 = st.columns(2)
-                    c1.metric("예상 평년 수온", f"{pred_t:.2f} ℃")
-                    c2.metric("예상 평년 염분", f"{pred_s:.2f} psu")
+                    c1, c2, c3, c4, c5 = st.columns(5)
+                    c1.metric("예상 수온", f"{t:.2f} ℃")
+                    c2.metric("예상 염분", f"{s:.2f} psu")
+                    c3.metric("예상 풍향", f"{wd:.1f} º")
+                    c4.metric("예상 풍속", f"{ws:.1f} m/s")
+                    c5.metric("예상 조위", f"{td:.0f} cm")
                     
                     st.markdown(f"#### 예측 진단: :{color}[{level}]")
                     st.caption(f"* 과거 {len(historical_samples)}개 연도의 {target_md} 데이터를 기반으로 분석했습니다.")
@@ -219,40 +224,58 @@ def main():
                 else:
                     st.error("해당 날짜의 과거 통계 데이터가 부족합니다.")
 
-    # [탭 3] 수온별 예측
+    # [탭 3] 다변수 시뮬레이션
     with tab3:
-        st.subheader("수온별 염분 예측")
-        col_in, col_out = st.columns([1, 2])
-        with col_in:
-            input_temp = st.number_input("가상 수온 입력 (℃)", value=25.5, step=0.1)
-            btn_predict = st.button("예측 및 유사도 분석", type="primary", key='btn2', use_container_width=True)
-
-        if btn_predict:
-            X = env_df[['Temp']]
-            y = env_df['Salt']
-            model = LinearRegression()
-            model.fit(X, y)
-            pred_salt = model.predict([[input_temp]])[0]
+        st.subheader("다변수 선형회귀(Linear Regression) 기반 적조 발생 시뮬레이션")
+        st.info("5가지 환경 변수를 조절하여 머신러닝 모델이 예측하는 '적조 발생 밀도'와 각 요인의 영향력을 확인하세요.")
+        
+        if ml_data is not None:
+            # 모델 학습
+            features = ['Temp', 'Salt', 'WindDir', 'WindSpeed', 'Tide']
+            X = ml_data[features]
+            y = ml_data['Density']
             
-            level, color, reasons = assess_red_tide_risk(input_temp, pred_salt)
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(X)
             
-            with col_out:
-                st.markdown("### 1. 예측 결과")
-                c1, c2 = st.columns(2)
-                c1.metric("예상 염분", f"{pred_salt:.2f} psu")
+            lr_model = LinearRegression()
+            lr_model.fit(X_scaled, y)
+            
+            col_in, col_out = st.columns([1, 2])
+            with col_in:
+                st.markdown("해양 환경 가상 설정")
+                in_t = st.slider("수온 (℃)", 15.0, 32.0, 25.0, 0.1)
+                in_s = st.slider("염분 (psu)", 20.0, 36.0, 32.0, 0.1)
+                in_wd = st.slider("풍향 (º, 180=남풍)", 0.0, 360.0, 180.0, 1.0)
+                in_ws = st.slider("풍속 (m/s)", 0.0, 20.0, 3.0, 0.1)
+                in_td = st.slider("조위 (cm)", 0.0, 400.0, 150.0, 1.0)
                 
-                st.markdown(f"#### 진단: :{color}[{level}]")
-                st.info("💡 **분석 근거:**\n\n" + "\n".join([f"- {r}" for r in reasons]))
+            with col_out:
+                # 사용자가 슬라이더로 입력한 값을 스케일링 후 예측
+                input_scaled = scaler.transform([[in_t, in_s, in_wd, in_ws, in_td]])
+                pred_density = lr_model.predict(input_scaled)[0]
+                pred_density = max(0, pred_density) # 예측값이 음수면 0으로 처리
+                
+                st.markdown("AI 예측 적조 밀도")
+                st.metric(label="예상 Red Tide Density", value=f"{pred_density:,.0f} cells/mL")
+                
+                if pred_density > 1000:
+                    st.error("🚨 경고: 적조 주의보 발령 기준(1,000 cells/mL)을 초과하는 환경입니다!")
+                elif pred_density > 0:
+                    st.warning("⚠️ 주의: 적조 발생 가능성이 있는 환경입니다.")
+                else:
+                    st.success("✅ 안전: 적조가 발생하기 어려운 환경입니다.")
 
                 st.divider()
+                st.markdown("분석 변수별 영향력 도출")
                 
-                # 유사도 확인
-                st.markdown("### 2. 과거 유사 사례 (Top 5)")
-                st.caption(f"수온 {input_temp}℃, 염분 {pred_salt:.2f}psu와 가장 환경이 비슷했던 과거 날짜들입니다.")
-                
-                env_df['Similarity'] = (env_df['Temp'] - input_temp)**2 + (env_df['Salt'] - pred_salt)**2
-                top5 = env_df.sort_values('Similarity').head(5)
-                st.dataframe(top5[['Temp', 'Salt']], use_container_width=True)
+                coef_dict = dict(zip(features, lr_model.coef_))
+                for feature, coef in coef_dict.items():
+                    direction = "증가" if coef > 0 else "감소"
+                    color = "red" if coef > 0 else "blue"
+                    st.write(f"- **{feature}**: 수치가 커질수록 적조 밀도가 :{color}[**{direction}**]하는 경향성 (가중치: {coef:.2f})")
+        else:
+            st.error("적조 발생 데이터가 없어 머신러닝 학습을 진행할 수 없습니다.")
     
     # [탭 4] 데이터 시각화
     with tab4:
@@ -321,6 +344,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
