@@ -180,7 +180,7 @@ def main():
             st.warning("적조 발생 데이터 없음 (머신러닝 시각화 불가)")
 
     # 탭 구성
-    tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "🌡️ 수온별 염분 예측", "📊 데이터 분포"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "📊 데이터 분포"])
 
     # [탭 1] 과거 날짜 조회
     with tab1:
@@ -255,61 +255,8 @@ def main():
                         for r in reasons: st.write(f"- {r}")
                 else:
                     st.error("해당 날짜의 과거 통계 데이터가 부족합니다.")
-
-    # [탭 3] 다변수 시뮬레이션
-    with tab3:
-        st.subheader("다변수 선형회귀(Linear Regression) 기반 적조 발생 시뮬레이션")
-        st.info("5가지 환경 변수를 조절하여 머신러닝 모델이 예측하는 '적조 발생 밀도'와 각 요인의 영향력을 확인하세요.")
-        
-        if ml_data is not None:
-            # 모델 학습
-            features = ['Temp', 'Salt', 'WindDir', 'WindSpeed', 'Tide']
-            X = ml_data[features]
-            y = ml_data['Density']
-            
-            scaler = StandardScaler()
-            X_scaled = scaler.fit_transform(X)
-            
-            lr_model = LinearRegression()
-            lr_model.fit(X_scaled, y)
-            
-            col_in, col_out = st.columns([1, 2])
-            with col_in:
-                st.markdown("해양 환경 가상 설정")
-                in_t = st.slider("수온 (℃)", 15.0, 32.0, 25.0, 0.1)
-                in_s = st.slider("염분 (psu)", 20.0, 36.0, 32.0, 0.1)
-                in_wd = st.slider("풍향 (º, 180=남풍)", 0.0, 360.0, 180.0, 1.0)
-                in_ws = st.slider("풍속 (m/s)", 0.0, 20.0, 3.0, 0.1)
-                in_td = st.slider("조위 (cm)", 0.0, 400.0, 150.0, 1.0)
-                
-            with col_out:
-                # 사용자가 슬라이더로 입력한 값을 스케일링 후 예측
-                input_scaled = scaler.transform([[in_t, in_s, in_wd, in_ws, in_td]])
-                pred_density = lr_model.predict(input_scaled)[0]
-                pred_density = max(0, pred_density) # 예측값이 음수면 0으로 처리
-                
-                st.markdown("AI 예측 적조 밀도")
-                st.metric(label="예상 Red Tide Density", value=f"{pred_density:,.0f} cells/mL")
-                
-                if pred_density > 1000:
-                    st.error("🚨 경고: 적조 주의보 발령 기준(1,000 cells/mL)을 초과하는 환경입니다!")
-                elif pred_density > 0:
-                    st.warning("⚠️ 주의: 적조 발생 가능성이 있는 환경입니다.")
-                else:
-                    st.success("✅ 안전: 적조가 발생하기 어려운 환경입니다.")
-
-                st.divider()
-                st.markdown("분석 변수별 영향력 도출")
-                
-                coef_dict = dict(zip(features, lr_model.coef_))
-                for feature, coef in coef_dict.items():
-                    direction = "증가" if coef > 0 else "감소"
-                    color = "red" if coef > 0 else "blue"
-                    st.write(f"- **{feature}**: 수치가 커질수록 적조 밀도가 :{color}[**{direction}**]하는 경향성 (가중치: {coef:.2f})")
-        else:
-            st.error("적조 발생 데이터가 없어 머신러닝 학습을 진행할 수 없습니다.")
     
-    # [탭 4] 데이터 시각화
+    # [탭 3] 데이터 시각화
     with tab4:
         st.subheader("통영 해역 수온·염분 분포와 적조 밀도")
         
@@ -386,6 +333,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
