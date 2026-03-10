@@ -338,17 +338,16 @@ def main():
                 (total_df['Temp'] > 0) & (total_df['Temp'] < 35) & 
                 (total_df['Salt'] > 0) & (total_df['Salt'] < 45)
             ]
-
-            # 2. 시각화 스타일 설정
-            base_cmap = plt.cm.get_cmap('Reds')
-
+            
             # 2. 시각화 스타일 설정
             base_cmap = plt.cm.get_cmap('Reds')
             colors_list = [base_cmap(i) for i in range(base_cmap.N)]
             colors_list[0] = mcolors.to_rgba('white')
             custom_cmap = mcolors.LinearSegmentedColormap.from_list('WhiteRed', colors_list, base_cmap.N)
-            total_df['Size_Scale'] = np.log1p(total_df['Density']) 
-
+            total_df['Density'] = pd.to_numeric(total_df['Density'], errors='coerce').fillna(0)
+            
+            total_df['Size_Scale'] = np.log1p(total_df['Density']) # 이제 에러 없이 계산됩니다!
+            
             # 3. 플롯 그리기
             points = sns.scatterplot(
                 data=total_df,
@@ -387,6 +386,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
