@@ -55,12 +55,11 @@ def load_all_data():
             try:
                 env_df = pd.read_csv(fpath)
                 
+                # 💡 [핵심 해결] 실제 CSV 파일에 있는 영어 컬럼명을 코드에서 쓰는 이름으로 매핑합니다.
                 rename_dict = {
-                    '수온': 'Temp', 
-                    '염분': 'Salt', 
-                    '풍향': 'WindDir', 
-                    '풍속': 'WindSpeed', 
-                    '조위': 'Tide'
+                    'Wind speed': 'WindSpeed', 
+                    'Wind direction': 'WindDir', 
+                    'Tidal level': 'Tide'
                 }
                 env_df.rename(columns=rename_dict, inplace=True)
                 
@@ -392,6 +391,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
