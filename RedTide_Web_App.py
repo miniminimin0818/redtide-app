@@ -55,7 +55,6 @@ def load_all_data():
             try:
                 env_df = pd.read_csv(fpath)
                 
-                # 💡 [핵심] CSV 파일의 컬럼명이 한글일 경우 코드가 인식할 수 있게 영어로 강제 변환
                 rename_dict = {
                     '수온': 'Temp', 
                     '염분': 'Salt', 
@@ -68,7 +67,7 @@ def load_all_data():
                 env_df['Date'] = pd.to_datetime(env_df['Date'])
                 env_df.set_index('Date', inplace=True)
                 
-                # 이상치 제거 (수온과 염분이 존재하는 정상적인 데이터만 필터링)
+                # 이상치 제거
                 if 'Temp' in env_df.columns and 'Salt' in env_df.columns:
                     env_df = env_df[(env_df['Temp'] > 0) & (env_df['Salt'] > 0) & (env_df['Salt'] < 45)]
                 
@@ -377,4 +376,5 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
