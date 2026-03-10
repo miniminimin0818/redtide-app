@@ -161,11 +161,18 @@ def main():
         col1, col2 = st.columns([1, 2])
         with col1:
             min_d, max_d = env_df.index.min().date(), env_df.index.max().date()
-            # 기본값: 데이터에 존재하는 안전한 날짜
-            default_d = pd.to_datetime("2005-08-18").date() 
+            
+            # 기본값 설정: 2005-08-18이 데이터 범위 내에 있는지 확인
+            target_default = pd.to_datetime("2005-08-18").date()
+            if min_d <= target_default <= max_d:
+                default_d = target_default
+            else:
+                # 범위를 벗어나면 데이터의 가장 최신 날짜(max_d)를 기본값으로 사용
+                default_d = max_d 
+                
             input_date = st.date_input("과거 날짜 선택", value=default_d, min_value=min_d, max_value=max_d)
-            btn_query = st.button("조회하기", type="primary", key='btn1', use_container_width=True)
-
+            btn_query = st.button("조회하기", type="primary", use_container_width=True)
+            
         with col2:
             if btn_query:
                 target_data = env_df[env_df.index.date == input_date]
@@ -344,6 +351,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
