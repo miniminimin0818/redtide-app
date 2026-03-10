@@ -54,29 +54,47 @@ def load_all_data():
         if os.path.exists(fpath):
             try:
                 env_df = pd.read_csv(fpath)
+                
+                # 💡 [핵심] CSV 파일의 컬럼명이 한글일 경우 코드가 인식할 수 있게 영어로 강제 변환
+                rename_dict = {
+                    '수온': 'Temp', 
+                    '염분': 'Salt', 
+                    '풍향': 'WindDir', 
+                    '풍속': 'WindSpeed', 
+                    '조위': 'Tide'
+                }
+                env_df.rename(columns=rename_dict, inplace=True)
+                
                 env_df['Date'] = pd.to_datetime(env_df['Date'])
                 env_df.set_index('Date', inplace=True)
-                # 이상치 제거
-                env_df = env_df[(env_df['Temp'] > 0) & (env_df['Salt'] > 0) & (env_df['Salt'] < 45)]
-                # 월-일 정보 추가 (미래 예측용)
+                
+                # 이상치 제거 (수온과 염분이 존재하는 정상적인 데이터만 필터링)
+                if 'Temp' in env_df.columns and 'Salt' in env_df.columns:
+                    env_df = env_df[(env_df['Temp'] > 0) & (env_df['Salt'] > 0) & (env_df['Salt'] < 45)]
+                
+                # 월-일 정보 추가
                 env_df['MM-DD'] = env_df.index.strftime('%m-%d')
                 break
-            except: pass
+            except Exception as e:
+                # 에러를 숨기지 않고 터미널이나 화면에 출력하여 디버깅을 돕습니다.
+                print(f"tongyeong_lite.csv 로드 중 에러: {e}")
+                pass
             
-    # 2. 적조 발생 데이터 로드 (밀도 정보 포함)
+    # 2. 적조 발생 데이터 로드
     for p in paths:
         fpath = os.path.join(p, "redtide_occurrences.csv")
         if os.path.exists(fpath):
             try:
                 occur_df = pd.read_csv(fpath)
                 occur_df['Date'] = pd.to_datetime(occur_df['Date'])
-                # 밀도가 숫자형이 되도록 변환
                 occur_df['Density'] = pd.to_numeric(occur_df['Density'], errors='coerce').fillna(0)
                 break
-            except: pass
+            except Exception as e:
+                print(f"redtide_occurrences.csv 로드 중 에러: {e}")
+                pass
             
     return env_df, occur_df
-
+    
 # -----------------------------------------------------------------------------
 # 4. 적조 위험도 진단 로직 (5가지 변수 적용)
 # -----------------------------------------------------------------------------
@@ -151,10 +169,18 @@ def main():
             
         if occur_df is not None:
             st.success(f"적조 발생 데이터 연결됨 ({len(occur_df):,}건)")
-            # 💡 머신러닝 학습을 위한 데이터 병합 준비
             ml_data = pd.merge(env_df.reset_index(), occur_df[['Date', 'Density']], on='Date', how='left')
             ml_data['Density'] = ml_data['Density'].fillna(0)
-            ml_data = ml_data.dropna(subset=['Temp', 'Salt', 'WindDir', 'WindSpeed', 'Tide'])
+            
+            # 💡 [필수 방어 코드] 컬럼 존재 여부 확인
+            req_cols = ['Temp', 'Salt', 'WindDir', 'WindSpeed', 'Tide']
+            missing_cols = [col for col in req_cols if col not in ml_data.columns]
+            
+            if missing_cols:
+                st.error(f"🚨 부족한 컬럼이 있어 ML을 켤 수 없습니다: {missing_cols}")
+                ml_data = None
+            else:
+                ml_data = ml_data.dropna(subset=req_cols)
         else:
             st.warning("적조 발생 데이터 없음 (머신러닝 시각화 불가)")
 
@@ -300,17 +326,11 @@ def main():
             # 1. 데이터 병합
             bg_sample = env_df.sample(min(len(env_df), 5000)).copy()    
             bg_sample['Density'] = 0  
-            if occur_df is not None and not occur_df.empty:
-                target_df = occur_df[occur_df['Density'] > 0].copy()
+            # 💡 [핵심] occur_df가 아닌 수온/염분/밀도가 모두 모여있는 ml_data를 사용!
+            if ml_data is not None and not ml_data.empty:
+                target_df = ml_data[ml_data['Density'] > 0].copy()
             else:
                 target_df = pd.DataFrame(columns=bg_sample.columns)
-            
-            total_df = pd.concat([bg_sample, target_df], ignore_index=True)
-            total_df = total_df.sort_values('Density', ascending=True)
-            total_df = total_df[
-                (total_df['Temp'] > 0) & (total_df['Temp'] < 35) & 
-                (total_df['Salt'] > 0) & (total_df['Salt'] < 45)
-            ]
 
             # 2. 시각화 스타일 설정
             base_cmap = plt.cm.get_cmap('Reds')
@@ -357,41 +377,3 @@ def main():
 if __name__ == "__main__":
 
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
