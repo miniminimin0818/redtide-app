@@ -133,15 +133,17 @@ def main():
     st.title("🌊 통영 적조 예측 및 분석 시스템")
     st.markdown("##### 지난 25년간(2000-2024)의 통영 조위관측소 데이터 및 실제 적조 발생 이력 기반")
     
+    # 💡 [핵심 해결 포인트] 변수를 미리 None으로 초기화하여 NameError를 원천 차단합니다.
+    ml_data = None 
+    
     with st.sidebar:
         st.header("데이터 현황")
         with st.spinner("데이터 로딩 중..."):
             env_df, occur_df = load_all_data()
+
         if env_df is not None:
-            st.success("연결 성공!")
+            st.success("환경 데이터 연결 성공!")
             st.metric("총 데이터", f"{len(env_df):,} 건")
-            st.metric("분석 기간", f"{env_df.index.min().year} ~ {env_df.index.max().year}")
-            st.info("현재 '국립해양조사원 바다누리 해양정보 서비스 통영 조위관측소', '국립수산과학원 적조 속보 데이터' 데이터를 사용 중입니다.")
         else:
             st.error("데이터 없음")
             st.warning("tongyeong_lite.csv 파일을 찾을 수 없습니다.")
@@ -149,8 +151,12 @@ def main():
             
         if occur_df is not None:
             st.success(f"적조 발생 데이터 연결됨 ({len(occur_df):,}건)")
+            # 💡 머신러닝 학습을 위한 데이터 병합 준비
+            ml_data = pd.merge(env_df.reset_index(), occur_df[['Date', 'Density']], on='Date', how='left')
+            ml_data['Density'] = ml_data['Density'].fillna(0)
+            ml_data = ml_data.dropna(subset=['Temp', 'Salt', 'WindDir', 'WindSpeed', 'Tide'])
         else:
-            st.warning("적조 발생 데이터 없음 (밀도 시각화 불가)")
+            st.warning("적조 발생 데이터 없음 (머신러닝 시각화 불가)")
 
     # 탭 구성
     tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "🌡️ 수온별 염분 예측", "📊 데이터 분포"])
@@ -351,6 +357,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
