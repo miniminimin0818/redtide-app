@@ -180,7 +180,7 @@ def main():
             st.warning("적조 발생 데이터 없음 (머신러닝 시각화 불가)")
 
     # 탭 구성
-    tab1, tab2, tab3, tab4 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "📊 데이터 분포"])
+    tab1, tab2, tab3 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "📊 데이터 분포"])
 
     # [탭 1] 과거 날짜 조회
     with tab1:
@@ -257,7 +257,7 @@ def main():
                     st.error("해당 날짜의 과거 통계 데이터가 부족합니다.")
     
     # [탭 3] 데이터 시각화
-    with tab4:
+    with tab3:
         st.subheader("통영 해역 수온·염분 분포와 적조 밀도")
         
         if st.checkbox("그래프 보기", value=True):
@@ -333,6 +333,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
