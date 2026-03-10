@@ -331,6 +331,17 @@ def main():
             else:
                 target_df = pd.DataFrame(columns=bg_sample.columns)
 
+            # 💡 [핵심 해결] 실수로 지워졌던 total_df 생성 코드 복구!
+            total_df = pd.concat([bg_sample, target_df], ignore_index=True)
+            total_df = total_df.sort_values('Density', ascending=True)
+            total_df = total_df[
+                (total_df['Temp'] > 0) & (total_df['Temp'] < 35) & 
+                (total_df['Salt'] > 0) & (total_df['Salt'] < 45)
+            ]
+
+            # 2. 시각화 스타일 설정
+            base_cmap = plt.cm.get_cmap('Reds')
+
             # 2. 시각화 스타일 설정
             base_cmap = plt.cm.get_cmap('Reds')
             colors_list = [base_cmap(i) for i in range(base_cmap.N)]
@@ -376,5 +387,6 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
