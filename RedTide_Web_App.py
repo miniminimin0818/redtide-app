@@ -2,12 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
 import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.patches as patches
 import seaborn as sns
 import platform
+
 
 # -----------------------------------------------------------------------------
 # 1. 페이지 기본 설정
@@ -76,60 +78,54 @@ def load_all_data():
     return env_df, occur_df
 
 # -----------------------------------------------------------------------------
-# 4. 적조 위험도 진단 로직 (사용자 지정 로직 유지)
+# 4. 적조 위험도 진단 로직 (5가지 변수 적용)
 # -----------------------------------------------------------------------------
-def assess_red_tide_risk(temp, salt):
+def assess_red_tide_risk(temp, salt, wind_dir, wind_speed, tide):
     risk_score = 0
     reasons = []
 
     # --- 수온 평가 ---
-    if 20 == temp:
-        risk_score += 70
-        reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
-    elif 25 == temp:
-        risk_score += 70
-        reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
-    elif 27.5 == temp:
-        risk_score += 70
-        reasons.append("🌡️ **최적수온(20℃, 25℃, 27.5℃)**: 적조 생물 증식에 최적입니다.")
-    elif 21 <= temp <= 24.9:
-        risk_score += 50
-        reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
-    elif 25.1 <= temp <= 27.4:
-        risk_score += 55
-        reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
-    elif 27.6 <= temp <= 30:
-        risk_score += 65
-        reasons.append("🌡️ **중온(21~29℃)**: 적조 생물이 양호한 성장률을 보입니다.")
-    elif temp >= 30:
-        risk_score -= 20
-        reasons.append("🌡️ **고온(30℃↑)**: 적조 생물 성장이 확연히 저하됩니다.")
-    elif temp <= 15:
-        risk_score -= 20
-        reasons.append("❄️ **과저수온(15℃↓)**: 적조 생물 성장이 확연히 저하됩니다.")
+    if 20 <= temp <= 27.5:
+        risk_score += 40
+        reasons.append(f"🌡️ 수온({temp:.1f}℃): 적조 생물 증식 최적 범위입니다.")
     else:
         risk_score -= 10
-        reasons.append("🌡️ **수온**: 적조 발생 최적 범위를 벗어났습니다.")
+        reasons.append(f"🌡️ 수온({temp:.1f}℃): 증식 최적 범위를 벗어났습니다.")
 
     # --- 염분 평가 ---
     if 31 <= salt <= 34:
-        risk_score += 50
-        reasons.append("🧂 **염분(31~34psu)**: 적조 생물 증식에 최적입니다.")        
-    elif salt <= 20:
-        risk_score -= 20
-        reasons.append("🧂 **저염분(20psu↓)**: 염분이 너무 낮아 적조 생물의 성장이 특히 저하됩니다.")
+        risk_score += 20
+        reasons.append(f"🧂 염분({salt:.1f}psu): 성장에 적합한 염분입니다.")
     else:
         risk_score -= 10
-        reasons.append("🧂 **염분**: 적조 발생 최적 범위를 벗어났습니다.")
+        reasons.append(f"🧂 염분({salt:.1f}psu): 적조 발생 확률이 낮은 염분대입니다.")
+
+    # --- 풍속 평가 ---
+    if wind_speed < 4.0:
+        risk_score += 15
+        reasons.append(f"🌬️ 풍속({wind_speed:.1f}m/s): 바람이 약해 해수면이 성층화되어 집적에 유리합니다.")
+    elif wind_speed > 8.0:
+        risk_score -= 15
+        reasons.append(f"🌀 풍속({wind_speed:.1f}m/s): 강풍으로 해수가 혼합되어 적조가 분산됩니다.")
+
+    # --- 풍향 평가 (135~225도: 남풍 계열) ---
+    if 135 <= wind_dir <= 225:
+        risk_score += 15
+        reasons.append(f"🧭 풍향({wind_dir:.1f}º): 남풍 계열로 외해의 적조가 연안으로 밀려올 위험이 큽니다.")
+    elif 315 <= wind_dir or wind_dir <= 45:
+        risk_score -= 10
+        reasons.append(f"🧭 풍향({wind_dir:.1f}º): 북풍 계열로 적조가 외해로 흩어지기 쉽습니다.")
+
+    # --- 조위 평가 ---
+    reasons.append(f"🌊 조위({tide:.1f}cm): 현재 조위 상태입니다.")
 
     # --- 최종 진단 ---
-    if risk_score >= 85:
-        return "🚨 매우 위험 (적조 대발생 가능)", "red", reasons
+    if risk_score >= 70:
+        return "🚨 매우 위험", "red", reasons
     elif risk_score >= 40:
-        return "⚠️ 주의 (적조 발생 가능 조건 충족)", "orange", reasons
+        return "⚠️ 주의", "orange", reasons
     else:
-        return "✅ 안전 (적조 발생 확률 낮음)", "green", reasons
-
+        return "✅ 안전", "green", reasons
 # -----------------------------------------------------------------------------
 # 5. 메인 화면 구성
 # -----------------------------------------------------------------------------
@@ -325,6 +321,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
