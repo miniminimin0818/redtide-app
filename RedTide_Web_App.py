@@ -55,11 +55,8 @@ def load_all_data():
             try:
                 env_df = pd.read_csv(fpath)
                 
-                # 💡 [핵심 해결] 실제 CSV 파일에 있는 영어 컬럼명을 코드에서 쓰는 이름으로 매핑합니다.
                 rename_dict = {
-                    'Wind speed': 'WindSpeed', 
-                    'Wind direction': 'WindDir', 
-                    'Tidal level': 'Tide'
+                    'Wind speed': 'WindSpeed', 'Wind direction': 'WindDir', 'Tidal level': 'Tide'
                 }
                 env_df.rename(columns=rename_dict, inplace=True)
                 
@@ -191,8 +188,6 @@ def main():
         col1, col2 = st.columns([1, 2])
         with col1:
             min_d, max_d = env_df.index.min().date(), env_df.index.max().date()
-            
-            # 기본값 설정: 2005-08-18이 데이터 범위 내에 있는지 확인
             target_default = pd.to_datetime("2005-08-18").date()
             if min_d <= target_default <= max_d:
                 default_d = target_default
@@ -391,6 +386,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
