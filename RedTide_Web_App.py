@@ -255,32 +255,29 @@ def main():
         
         if st.checkbox("그래프 렌더링", value=True):
             if ml_data is not None and not ml_data.empty:
-                # 1. 평상시 데이터 (회색 배경용, 앱 속도를 위해 2000개만 샘플링)
                 bg_df = ml_data[ml_data['Density'] == 0].sample(n=min(len(ml_data), 2000), random_state=42)
-                
-                # 2. 적조 발생 데이터 (주인공)
                 target_df = ml_data[ml_data['Density'] > 0].copy()
                 
                 fig = go.Figure()
 
-                # 레이어 1: 평상시 바다 환경 (시선이 분산되지 않게 연한 회색 처리)
+                # 💡 수정 1: 평상시 배경 점 크기를 5 -> 2로 대폭 줄이고 투명도를 높임
                 fig.add_trace(go.Scatter(
                     x=bg_df['Temp'], y=bg_df['Salt'],
                     mode='markers',
-                    marker=dict(color='lightgray', size=5, opacity=0.3),
+                    marker=dict(color='lightgray', size=2, opacity=0.2), # 크기 축소!
                     name='평상시 (미발생)',
-                    hoverinfo='none' # 마우스 올려도 반응 없게 설정
+                    hoverinfo='none' 
                 ))
 
-                # 레이어 2: 적조 발생 구역 (밀도에 따라 크기와 색상 변화)
+                # 💡 수정 2: 적조 발생 점의 크기를 키움 (배수를 1.5 -> 3.5로 증가)
                 if not target_df.empty:
                     fig.add_trace(go.Scatter(
                         x=target_df['Temp'], y=target_df['Salt'],
                         mode='markers',
                         marker=dict(
-                            size=np.log1p(target_df['Density']) * 1.5, # 밀도 클수록 점 커짐
-                            color=target_df['Density'],               # 밀도 클수록 색 진해짐
-                            colorscale='Reds',                        # 하얀색 -> 붉은색
+                            size=np.log1p(target_df['Density']) * 3.5, # 크기 대폭 확대!
+                            color=target_df['Density'],               
+                            colorscale='Reds',                        
                             showscale=True,
                             colorbar=dict(title="적조 밀도<br>(cells/mL)"),
                             line=dict(width=0.5, color='darkred')
@@ -290,7 +287,7 @@ def main():
                         name='적조 발생'
                     ))
 
-                # 레이어 3: 적조 생장 위험 구역 가이드라인 박스 (가시성 향상)
+                # 레이어 3: 적조 생장 위험 구역 가이드라인 박스
                 fig.add_shape(
                     type="rect",
                     x0=22, y0=30, x1=28, y1=34,
@@ -300,14 +297,14 @@ def main():
                     x=25, y=34.3, text="🚨 주요 생장 위험 구간", showarrow=False, font=dict(color="red", size=13)
                 )
 
-                # 3. 그래프 레이아웃 최적화
+                # 그래프 레이아웃 최적화
                 fig.update_layout(
                     xaxis_title="수온 (℃)",
                     yaxis_title="염분 (psu)",
-                    xaxis=dict(range=[5, 33]), # 우리나라 연안 수온 범위로 제한
+                    xaxis=dict(range=[5, 33]), 
                     yaxis=dict(range=[28, 36]),
                     height=550,
-                    plot_bgcolor='rgba(245, 245, 245, 0.8)', # 아주 연한 배경색
+                    plot_bgcolor='rgba(245, 245, 245, 0.8)', 
                     hovermode="closest"
                 )
                 
@@ -317,6 +314,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
