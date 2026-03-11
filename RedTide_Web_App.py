@@ -301,7 +301,7 @@ def main():
                     yaxis=dict(range=[28, 36]),
                     height=550,
                     plot_bgcolor='rgba(245, 245, 245, 0.8)', 
-                    hovermode="closest"
+                    hovermode="closest",
                     
                     legend=dict(
                         orientation="h",      # v는 세로(기본), h는 가로 배치
@@ -318,6 +318,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
