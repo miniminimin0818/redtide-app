@@ -261,7 +261,7 @@ def main():
                 fig.add_trace(go.Scatter(
                     x=bg_df['Temp'], y=bg_df['Salt'],
                     mode='markers',
-                    marker=dict(color='lightgray', size=32, opacity=0.45),
+                    marker=dict(color='lightgray', size=3, opacity=0.45),
                     name='평상시 (미발생)',
                     hoverinfo='none' 
                 ))
@@ -310,6 +310,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
