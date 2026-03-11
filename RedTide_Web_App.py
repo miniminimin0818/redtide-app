@@ -130,7 +130,6 @@ def main():
     st.title("🌊 통영 적조 예측 및 분석 시스템")
     st.markdown("##### 지난 25년간(2000-2024)의 통영 조위관측소 데이터 및 실제 적조 발생 이력 기반")
     
-    # 💡 [핵심 해결 포인트] 변수를 미리 None으로 초기화하여 NameError를 원천 차단합니다.
     ml_data = None 
     
     with st.sidebar:
@@ -149,7 +148,6 @@ def main():
         if occur_df is not None:
             st.success(f"적조 발생 데이터 연결됨 ({len(occur_df):,}건)")
             
-            # 💡 [변경] 병합 전 날짜(Date) 형식을 완벽하게 통일하여 데이터 증발 방지
             env_reset = env_df.reset_index()
             env_reset['Date'] = pd.to_datetime(env_reset['Date'])
             occur_df['Date'] = pd.to_datetime(occur_df['Date'])
@@ -176,13 +174,8 @@ def main():
         st.subheader("과거 바다 상태 조회")
         col1, col2 = st.columns([1, 2])
         with col1:
-            min_d, max_d = env_df.index.min().date(), env_df.index.max().date()
+            min_d = env_df.index.min().date(), env_df.index.max().date()
             target_default = pd.to_datetime("2005-08-18").date()
-            if min_d <= target_default <= max_d:
-                default_d = target_default
-            else:
-                # 범위를 벗어나면 데이터의 가장 최신 날짜(max_d)를 기본값으로 사용
-                default_d = max_d 
                 
             input_date = st.date_input("과거 날짜 선택", value=default_d, min_value=min_d, max_value=max_d)
             btn_query = st.button("조회하기", type="primary", use_container_width=True)
@@ -318,6 +311,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
