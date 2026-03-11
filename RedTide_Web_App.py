@@ -251,7 +251,7 @@ def main():
     # [탭 3] 데이터 시각화
     with tab3:
         st.subheader("📍 수온·염분에 따른 적조 발생 핫스팟 (Interactive)")
-        st.info("💡 점 위에 마우스를 올리면 상세 수치를 볼 수 있습니다. 마우스 드래그로 줌인/줌아웃이 가능합니다.")
+        st.info("💡 점 위에 마우스를 올리면 상세 수치를 볼 수 있습니다. 줌인/줌아웃이 가능합니다.")
         
         if st.checkbox("그래프 렌더링", value=True):
             if ml_data is not None and not ml_data.empty:
@@ -260,22 +260,20 @@ def main():
                 
                 fig = go.Figure()
 
-                # 💡 수정 1: 평상시 배경 점 크기를 5 -> 2로 대폭 줄이고 투명도를 높임
                 fig.add_trace(go.Scatter(
                     x=bg_df['Temp'], y=bg_df['Salt'],
                     mode='markers',
-                    marker=dict(color='lightgray', size=2, opacity=0.2), # 크기 축소!
+                    marker=dict(color='lightgray', size=32, opacity=0.2),
                     name='평상시 (미발생)',
                     hoverinfo='none' 
                 ))
 
-                # 💡 수정 2: 적조 발생 점의 크기를 키움 (배수를 1.5 -> 3.5로 증가)
                 if not target_df.empty:
                     fig.add_trace(go.Scatter(
                         x=target_df['Temp'], y=target_df['Salt'],
                         mode='markers',
                         marker=dict(
-                            size=np.log1p(target_df['Density']) * 3.5, # 크기 대폭 확대!
+                            size=np.log1p(target_df['Density']) * 5,
                             color=target_df['Density'],               
                             colorscale='Reds',                        
                             showscale=True,
@@ -294,7 +292,7 @@ def main():
                     line=dict(color="red", width=2, dash="dash"),
                 )
                 fig.add_annotation(
-                    x=25, y=34.3, text="🚨 주요 생장 위험 구간", showarrow=False, font=dict(color="red", size=13)
+                    x=23, y=34.3, text="🚨 주요 생장 위험 구간", showarrow=False, font=dict(color="red", size=13)
                 )
 
                 # 그래프 레이아웃 최적화
@@ -314,6 +312,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
