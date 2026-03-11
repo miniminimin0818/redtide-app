@@ -35,7 +35,6 @@ def load_all_data():
             try:
                 env_df = pd.read_csv(fpath)
                 
-                # 💡 [변경] 실제 파일의 띄어쓰기까지 정확하게 반영하여 이름 변환
                 rename_dict = {
                     'Wind speed': 'WindSpeed', 
                     'Wind direction': 'WindDir', 
@@ -55,7 +54,6 @@ def load_all_data():
                 break
                 
             except Exception as e:
-                # 에러를 숨기지 않고 터미널이나 화면에 출력하여 디버깅을 돕습니다.
                 print(f"tongyeong_lite.csv 로드 중 에러: {e}")
                 pass
             
@@ -263,7 +261,7 @@ def main():
                 fig.add_trace(go.Scatter(
                     x=bg_df['Temp'], y=bg_df['Salt'],
                     mode='markers',
-                    marker=dict(color='lightgray', size=32, opacity=0.2),
+                    marker=dict(color='lightgray', size=32, opacity=0.45),
                     name='평상시 (미발생)',
                     hoverinfo='none' 
                 ))
@@ -312,6 +310,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
