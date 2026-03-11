@@ -1,15 +1,10 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
 import os
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-import matplotlib.patches as patches
-import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
 import platform
-
 
 # -----------------------------------------------------------------------------
 # 1. 페이지 기본 설정
@@ -55,8 +50,11 @@ def load_all_data():
             try:
                 env_df = pd.read_csv(fpath)
                 
+                # 💡 [변경] 실제 파일의 띄어쓰기까지 정확하게 반영하여 이름 변환
                 rename_dict = {
-                    'Wind speed': 'WindSpeed', 'Wind direction': 'WindDir', 'Tidal level': 'Tide'
+                    'Wind speed': 'WindSpeed', 
+                    'Wind direction': 'WindDir', 
+                    'Tidal level': 'Tide'
                 }
                 env_df.rename(columns=rename_dict, inplace=True)
                 
@@ -70,6 +68,7 @@ def load_all_data():
                 # 월-일 정보 추가
                 env_df['MM-DD'] = env_df.index.strftime('%m-%d')
                 break
+                
             except Exception as e:
                 # 에러를 숨기지 않고 터미널이나 화면에 출력하여 디버깅을 돕습니다.
                 print(f"tongyeong_lite.csv 로드 중 에러: {e}")
@@ -164,20 +163,25 @@ def main():
             
         if occur_df is not None:
             st.success(f"적조 발생 데이터 연결됨 ({len(occur_df):,}건)")
-            ml_data = pd.merge(env_df.reset_index(), occur_df[['Date', 'Density']], on='Date', how='left')
+            
+            # 💡 [변경] 병합 전 날짜(Date) 형식을 완벽하게 통일하여 데이터 증발 방지
+            env_reset = env_df.reset_index()
+            env_reset['Date'] = pd.to_datetime(env_reset['Date'])
+            occur_df['Date'] = pd.to_datetime(occur_df['Date'])
+            
+            ml_data = pd.merge(env_reset, occur_df[['Date', 'Density']], on='Date', how='left')
             ml_data['Density'] = ml_data['Density'].fillna(0)
             
-            # 💡 [필수 방어 코드] 컬럼 존재 여부 확인
             req_cols = ['Temp', 'Salt', 'WindDir', 'WindSpeed', 'Tide']
             missing_cols = [col for col in req_cols if col not in ml_data.columns]
             
             if missing_cols:
-                st.error(f"🚨 부족한 컬럼이 있어 ML을 켤 수 없습니다: {missing_cols}")
+                st.error(f"🚨 부족한 컬럼이 있습니다: {missing_cols}")
                 ml_data = None
             else:
                 ml_data = ml_data.dropna(subset=req_cols)
         else:
-            st.warning("적조 발생 데이터 없음 (머신러닝 시각화 불가)")
+            st.warning("적조 발생 데이터 없음 (그래프 시각화 불가)")
 
     # 탭 구성
     tab1, tab2, tab3 = st.tabs(["📅 과거 날짜 조회", "🔮 미래 날짜 예측", "📊 데이터 분포"])
@@ -259,69 +263,72 @@ def main():
     
     # [탭 3] 데이터 시각화
     with tab3:
-        st.subheader("통영 해역 수온·염분 분포와 적조 발생 핫스팟")
+        st.subheader("📍 수온·염분에 따른 적조 발생 핫스팟 (Interactive)")
+        st.info("💡 점 위에 마우스를 올리면 상세 수치를 볼 수 있습니다. 마우스 드래그로 줌인/줌아웃이 가능합니다.")
         
-        if st.checkbox("그래프 보기", value=True):
-            fig, ax = plt.subplots(figsize=(10, 6))
-            
-            # 1. 배경 데이터 준비 (평범한 날들)
-            # 너무 많으면 지저분하므로 3000개만 샘플링
-            bg_sample = env_df.sample(min(len(env_df), 3000)).copy() 
-            
-            # 2. 적조 발생 데이터 준비 (주인공)
+        if st.checkbox("그래프 렌더링", value=True):
             if ml_data is not None and not ml_data.empty:
+                # 1. 평상시 데이터 (회색 배경용, 앱 속도를 위해 2000개만 샘플링)
+                bg_df = ml_data[ml_data['Density'] == 0].sample(n=min(len(ml_data), 2000), random_state=42)
+                
+                # 2. 적조 발생 데이터 (주인공)
                 target_df = ml_data[ml_data['Density'] > 0].copy()
-                target_df['Density'] = pd.to_numeric(target_df['Density'], errors='coerce').fillna(0)
-                # 크기 조절을 위한 스케일링
-                target_df['Size_Scale'] = np.log1p(target_df['Density'])
-            else:
-                target_df = pd.DataFrame(columns=['Temp', 'Salt', 'Density'])
+                
+                fig = go.Figure()
 
-            # 3. 레이어 1: 평범한 날 (연한 회색 바탕으로 시선 분산 방지)
-            ax.scatter(
-                bg_sample['Temp'], bg_sample['Salt'], 
-                color='lightgray', alpha=0.3, s=15, 
-                label='Normal Days (No Red Tide)', zorder=1
-            )
-            
-            # 4. 레이어 2: 적조 발생 핫스팟 등고선 & 산점도
-            if not target_df.empty:
-                # 등고선 그리기 (적조가 자주 발생하는 밀집 구역 시각화)
-                sns.kdeplot(
-                    data=target_df, x='Temp', y='Salt', 
-                    levels=5, color='red', linewidths=1.2, alpha=0.5, 
-                    ax=ax, zorder=2
+                # 레이어 1: 평상시 바다 환경 (시선이 분산되지 않게 연한 회색 처리)
+                fig.add_trace(go.Scatter(
+                    x=bg_df['Temp'], y=bg_df['Salt'],
+                    mode='markers',
+                    marker=dict(color='lightgray', size=5, opacity=0.3),
+                    name='평상시 (미발생)',
+                    hoverinfo='none' # 마우스 올려도 반응 없게 설정
+                ))
+
+                # 레이어 2: 적조 발생 구역 (밀도에 따라 크기와 색상 변화)
+                if not target_df.empty:
+                    fig.add_trace(go.Scatter(
+                        x=target_df['Temp'], y=target_df['Salt'],
+                        mode='markers',
+                        marker=dict(
+                            size=np.log1p(target_df['Density']) * 1.5, # 밀도 클수록 점 커짐
+                            color=target_df['Density'],               # 밀도 클수록 색 진해짐
+                            colorscale='Reds',                        # 하얀색 -> 붉은색
+                            showscale=True,
+                            colorbar=dict(title="적조 밀도<br>(cells/mL)"),
+                            line=dict(width=0.5, color='darkred')
+                        ),
+                        text=target_df['Density'],
+                        hovertemplate='<b>수온:</b> %{x:.1f}℃<br><b>염분:</b> %{y:.1f}psu<br><b>밀도:</b> %{text} cells/mL<extra></extra>',
+                        name='적조 발생'
+                    ))
+
+                # 레이어 3: 적조 생장 위험 구역 가이드라인 박스 (가시성 향상)
+                fig.add_shape(
+                    type="rect",
+                    x0=22, y0=30, x1=28, y1=34,
+                    line=dict(color="red", width=2, dash="dash"),
+                )
+                fig.add_annotation(
+                    x=25, y=34.3, text="🚨 주요 생장 위험 구간", showarrow=False, font=dict(color="red", size=13)
+                )
+
+                # 3. 그래프 레이아웃 최적화
+                fig.update_layout(
+                    xaxis_title="수온 (℃)",
+                    yaxis_title="염분 (psu)",
+                    xaxis=dict(range=[5, 33]), # 우리나라 연안 수온 범위로 제한
+                    yaxis=dict(range=[28, 36]),
+                    height=550,
+                    plot_bgcolor='rgba(245, 245, 245, 0.8)', # 아주 연한 배경색
+                    hovermode="closest"
                 )
                 
-                # 적조 발생 데이터 산점도 (눈에 띄는 컬러맵 적용)
-                scatter = ax.scatter(
-                    target_df['Temp'], target_df['Salt'],
-                    c=target_df['Density'], 
-                    cmap='YlOrRd', # 노랑 -> 주황 -> 빨강으로 변하는 컬러맵
-                    s=(target_df['Size_Scale'] * 12), # 점 크기 키우기
-                    edgecolors='black', linewidth=0.5, alpha=0.8,
-                    zorder=3, label='Red Tide Occurrence'
-                )
-                
-                # 컬러바 붙이기
-                cbar = plt.colorbar(scatter, ax=ax)
-                cbar.set_label('Red Tide Density (cells/mL)', rotation=270, labelpad=20)
-            
-            # 5. 부가 요소 (위험 구역 가이드라인 박스)
-            rect = patches.Rectangle((22, 31), 5.5, 3, linewidth=2, edgecolor='darkred', facecolor='none', linestyle='--', zorder=4)
-            ax.add_patch(rect)
-            ax.text(22, 30.5, "Optimum Range", color='darkred', fontsize=11, fontweight='bold')
-            
-            # 6. 축 범위 및 라벨 최적화 (바다 상황에 맞게 줌인)
-            ax.set_xlim(5, 32)  # 수온 범위 (5도 ~ 32도)
-            ax.set_ylim(28, 36) # 염분 범위 (28psu ~ 36psu)
-            ax.set_xlabel("Temperature (℃)", fontsize=11)
-            ax.set_ylabel("Salinity (psu)", fontsize=11)
-            ax.grid(True, alpha=0.3, linestyle='--')
-            ax.legend(loc='lower right')
-            
-            st.pyplot(fig)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.error("그래프를 그릴 데이터가 부족합니다.")
 
 if __name__ == "__main__":
     main()
+
 
