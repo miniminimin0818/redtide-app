@@ -16,22 +16,7 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# 2. 한글 폰트 설정
-# -----------------------------------------------------------------------------
-system_name = platform.system()
-if system_name == 'Windows':
-    plt.rc('font', family='Malgun Gothic')
-elif system_name == 'Darwin': # Mac
-    plt.rc('font', family='AppleGothic')
-else: # Linux (Colab, Streamlit Cloud)
-    try:
-        plt.rc('font', family='NanumGothic')
-    except:
-        pass
-plt.rcParams['axes.unicode_minus'] = False
-
-# -----------------------------------------------------------------------------
-# 3. 데이터 로드 함수
+# 2. 데이터 로드 함수
 # -----------------------------------------------------------------------------
 @st.cache_data
 def load_all_data():
@@ -90,7 +75,7 @@ def load_all_data():
     return env_df, occur_df
     
 # -----------------------------------------------------------------------------
-# 4. 적조 위험도 진단 로직 (5가지 변수 적용)
+# 3. 적조 위험도 진단 로직 (5가지 변수 적용)
 # -----------------------------------------------------------------------------
 def assess_red_tide_risk(temp, salt, wind_dir, wind_speed, tide):
     risk_score = 0
@@ -138,8 +123,10 @@ def assess_red_tide_risk(temp, salt, wind_dir, wind_speed, tide):
         return "⚠️ 주의", "orange", reasons
     else:
         return "✅ 안전", "green", reasons
+
+
 # -----------------------------------------------------------------------------
-# 5. 메인 화면 구성
+# 4. 메인 화면 구성
 # -----------------------------------------------------------------------------
 def main():
     st.title("🌊 통영 적조 예측 및 분석 시스템")
@@ -330,5 +317,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
