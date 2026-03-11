@@ -255,90 +255,73 @@ def main():
                         for r in reasons: st.write(f"- {r}")
                 else:
                     st.error("해당 날짜의 과거 통계 데이터가 부족합니다.")
+
     
     # [탭 3] 데이터 시각화
     with tab3:
-        st.subheader("통영 해역 수온·염분 분포와 적조 밀도")
+        st.subheader("통영 해역 수온·염분 분포와 적조 발생 핫스팟")
         
         if st.checkbox("그래프 보기", value=True):
-            fig, ax = plt.subplots(figsize=(10, 5))
+            fig, ax = plt.subplots(figsize=(10, 6))
             
-            # 1. 데이터 병합
-            bg_sample = env_df.sample(min(len(env_df), 5000)).copy()    
-            bg_sample['Density'] = 0  
-            # 💡 [핵심] occur_df가 아닌 수온/염분/밀도가 모두 모여있는 ml_data를 사용!
+            # 1. 배경 데이터 준비 (평범한 날들)
+            # 너무 많으면 지저분하므로 3000개만 샘플링
+            bg_sample = env_df.sample(min(len(env_df), 3000)).copy() 
+            
+            # 2. 적조 발생 데이터 준비 (주인공)
             if ml_data is not None and not ml_data.empty:
                 target_df = ml_data[ml_data['Density'] > 0].copy()
+                target_df['Density'] = pd.to_numeric(target_df['Density'], errors='coerce').fillna(0)
+                # 크기 조절을 위한 스케일링
+                target_df['Size_Scale'] = np.log1p(target_df['Density'])
             else:
-                target_df = pd.DataFrame(columns=bg_sample.columns)
+                target_df = pd.DataFrame(columns=['Temp', 'Salt', 'Density'])
 
-            # 💡 [핵심 해결] 실수로 지워졌던 total_df 생성 코드 복구!
-            total_df = pd.concat([bg_sample, target_df], ignore_index=True)
-            total_df = total_df.sort_values('Density', ascending=True)
-            total_df = total_df[
-                (total_df['Temp'] > 0) & (total_df['Temp'] < 35) & 
-                (total_df['Salt'] > 0) & (total_df['Salt'] < 45)
-            ]
-            
-            # 2. 시각화 스타일 설정
-            base_cmap = plt.cm.get_cmap('Reds')
-            colors_list = [base_cmap(i) for i in range(base_cmap.N)]
-            colors_list[0] = mcolors.to_rgba('white')
-            custom_cmap = mcolors.LinearSegmentedColormap.from_list('WhiteRed', colors_list, base_cmap.N)
-            
-            # 확실하게 숫자로 변환
-            total_df['Density'] = pd.to_numeric(total_df['Density'], errors='coerce').fillna(0)
-            total_df['Size_Scale'] = np.log1p(total_df['Density'])
-
-            # 💡 [핵심 해결 1] 4번에 있던 색상 기준(norm)을 위로 끌어올립니다.
-            # 데이터가 모두 0일 경우를 대비해 최소한의 최대값(1)을 보장해 에러를 막습니다.
-            max_density = total_df['Density'].max()
-            norm = plt.Normalize(vmin=0, vmax=max_density if max_density > 0 else 1)
-
-            # 3. 플롯 그리기
-            points = sns.scatterplot(
-                data=total_df,
-                x='Temp',
-                y='Salt',
-                hue='Density',
-                size='Size_Scale',
-                sizes=(30, 650),
-                palette=custom_cmap,
-                hue_norm=norm,        # 💡 [핵심 해결 2] Seaborn에게 연속적인 숫자라고 강제로 알려줍니다!
-                edgecolor='black',
-                linewidth=0.5,
-                alpha=0.7,
-                ax=ax,
-                legend=False
+            # 3. 레이어 1: 평범한 날 (연한 회색 바탕으로 시선 분산 방지)
+            ax.scatter(
+                bg_sample['Temp'], bg_sample['Salt'], 
+                color='lightgray', alpha=0.3, s=15, 
+                label='Normal Days (No Red Tide)', zorder=1
             )
             
-            # 4. 부가 요소 (컬러바, 위험구역 박스)
-            sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
-            sm.set_array([])
-            cbar = plt.colorbar(sm, ax=ax)
-            cbar.set_label('Red Tide Density (cells/mL)', rotation=270, labelpad=20)
+            # 4. 레이어 2: 적조 발생 핫스팟 등고선 & 산점도
+            if not target_df.empty:
+                # 등고선 그리기 (적조가 자주 발생하는 밀집 구역 시각화)
+                sns.kdeplot(
+                    data=target_df, x='Temp', y='Salt', 
+                    levels=5, color='red', linewidths=1.2, alpha=0.5, 
+                    ax=ax, zorder=2
+                )
+                
+                # 적조 발생 데이터 산점도 (눈에 띄는 컬러맵 적용)
+                scatter = ax.scatter(
+                    target_df['Temp'], target_df['Salt'],
+                    c=target_df['Density'], 
+                    cmap='YlOrRd', # 노랑 -> 주황 -> 빨강으로 변하는 컬러맵
+                    s=(target_df['Size_Scale'] * 12), # 점 크기 키우기
+                    edgecolors='black', linewidth=0.5, alpha=0.8,
+                    zorder=3, label='Red Tide Occurrence'
+                )
+                
+                # 컬러바 붙이기
+                cbar = plt.colorbar(scatter, ax=ax)
+                cbar.set_label('Red Tide Density (cells/mL)', rotation=270, labelpad=20)
             
-            # 위험 구간 박스 (수온 23-28, 염분 30-34 부근 강조)
-            import matplotlib.patches as patches
-            rect = patches.Rectangle((22, 30), 4, 4, linewidth=3, edgecolor='red', facecolor='none', linestyle='--')
+            # 5. 부가 요소 (위험 구역 가이드라인 박스)
+            rect = patches.Rectangle((22, 31), 5.5, 3, linewidth=2, edgecolor='darkred', facecolor='none', linestyle='--', zorder=4)
             ax.add_patch(rect)
-            ax.text(22, 28, "Red Tide Optimum", color='red', fontsize=11.5, fontweight='bold')
+            ax.text(22, 30.5, "Optimum Range", color='darkred', fontsize=11, fontweight='bold')
             
-            ax.set_xlabel("Temp (℃)")
-            ax.set_ylabel("Salt (psu)")
-            ax.grid(True, alpha=0.3)
+            # 6. 축 범위 및 라벨 최적화 (바다 상황에 맞게 줌인)
+            ax.set_xlim(5, 32)  # 수온 범위 (5도 ~ 32도)
+            ax.set_ylim(28, 36) # 염분 범위 (28psu ~ 36psu)
+            ax.set_xlabel("Temperature (℃)", fontsize=11)
+            ax.set_ylabel("Salinity (psu)", fontsize=11)
+            ax.grid(True, alpha=0.3, linestyle='--')
+            ax.legend(loc='lower right')
             
             st.pyplot(fig)
 
 if __name__ == "__main__":
-
     main()
-
-
-
-
-
-
-
-
 
