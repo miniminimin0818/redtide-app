@@ -261,7 +261,7 @@ def main():
                 fig.add_trace(go.Scatter(
                     x=bg_df['Temp'], y=bg_df['Salt'],
                     mode='markers',
-                    marker=dict(color='lightgray', size=3, opacity=0.45),
+                    marker=dict(color='lightgray', size=4, opacity=0.5),
                     name='평상시 (미발생)',
                     hoverinfo='none' 
                 ))
@@ -302,6 +302,14 @@ def main():
                     height=550,
                     plot_bgcolor='rgba(245, 245, 245, 0.8)', 
                     hovermode="closest"
+                    
+                    legend=dict(
+                        orientation="h",      # v는 세로(기본), h는 가로 배치
+                        yanchor="bottom",     # 기준점을 아래로 잡고
+                        y=1.02,               # y축 위치 (1이 맨 위, 1.02는 그래프 살짝 밖)
+                        xanchor="right",      # 기준점을 오른쪽으로 잡고
+                        x=1                   # x축 위치 (1은 맨 오른쪽)
+                    )
                 )
                 
                 st.plotly_chart(fig, use_container_width=True)
@@ -310,6 +318,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
