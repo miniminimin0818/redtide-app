@@ -174,10 +174,17 @@ def main():
         st.subheader("과거 바다 상태 조회")
         col1, col2 = st.columns([1, 2])
         with col1:
-            min_d = env_df.index.min().date(), env_df.index.max().date()
-            target_default = pd.to_datetime("2005-08-18").date()
-                
-            input_date = st.date_input("과거 날짜 선택", value=default_d, min_value=min_d, max_value=max_d)
+            # 데이터의 실제 최소/최대 날짜 확인
+            min_d, max_d = env_df.index.min().date(), env_df.index.max().date()
+            default_date = pd.to_datetime("2005-08-18").date()
+            if default_date < min_d: default_date = min_d
+               
+            input_date = st.date_input(
+                "과거 날짜 선택", 
+                value=default_date,    # 처음 뜨는 날짜
+                min_value=min_d,       # 달력에서 선택 가능한 최소 날짜
+                max_value=max_d        # 달력에서 선택 가능한 최대 날짜
+            )
             btn_query = st.button("조회하기", type="primary", use_container_width=True)
             
         with col2:
@@ -311,6 +318,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
